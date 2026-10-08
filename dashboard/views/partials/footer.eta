@@ -6,17 +6,15 @@
 <h3 class="fs-2 mb-md-0 text-muted align-middle" id="copy-right"></h3>
 
 	<ul class="nav col-md-4 justify-content-end list-unstyled d-flex">
-		<li class="ms-3"><a class="text-muted" href="https://www.facebook.com/ntkhang03">
-			<i class="fs-3 fab fa-facebook"></i>
-		</a></li>
-		<li class="ms-3"><a class="text-muted" href="https://github.com/ntkhang03/Goat-Bot-V2">
+		
+		<li class="ms-3"><a class="text-muted" href="https://github.com/masterjiraya890-svg/Aliya-Official--v4">
 			<i class="fs-3 fa-brands fa-github"></i>
 		</a></li>
 	</ul>
 </footer>
 
 <script>
-  document.getElementById('copy-right').innerHTML = `&copy; ${new Date().getFullYear()} NTKhang`;
+  document.getElementById('copy-right').innerHTML = `&copy; ${new Date().getFullYear()} Aliya Official V4 · Mr.king`;
 </script>
 </body>
 

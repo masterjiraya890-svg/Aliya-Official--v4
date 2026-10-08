@@ -193,7 +193,7 @@ fs.copyFileSync = function (src, dest) {
 		for (const folder of foldersBackup)
 			fs.moveSync(folder, `${backupsPath}/${folder}`);
 
-		log.info("UPDATE", `Update to version ${chalk.yellow(createUpdate.version)}`);
+		log.info("UPDATE", `Update Aliya Official v4 to version ${chalk.yellow(createUpdate.version)}`);
 		const { files, deleteFiles, reinstallDependencies } = createUpdate;
 
 		for (const filePath in files) {
@@ -291,7 +291,7 @@ fs.copyFileSync = function (src, dest) {
 
 		log.info("UPDATE", getText("updater", "backupSuccess", chalk.yellow(folderBackup)));
 	} catch (err) {
-		log.error("UPDATE", "Failed to update:", err.message || err);
+		log.error("UPDATE", "Failed to update Aliya Official v4:", err.message || err);
 	}
 })();
-																								
+						

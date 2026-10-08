@@ -1,4 +1,4 @@
-onst fs = require("fs-extra");
+const fs = require("fs-extra");
 const nullAndUndefined = [undefined, null];
 const leven = require('leven');
 

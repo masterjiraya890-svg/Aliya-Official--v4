@@ -1,5 +1,23 @@
 [
   {
+    "version": "1.5.34",
+    "files": {
+      "bot/handler/handlerEvents.js": "OPEN SOURCE 100%",
+      "bot/login/getFbstate1.js": "OPEN SOURCE 100%",
+      "bot/login/loadData.js": "OPEN SOURCE 100%",
+      "bot/login/loadScripts.js": "OPEN SOURCE 100%",
+      "bot/login/login.js": "OPEN SOURCE 100%",
+      "scripts/cmds/cmd.js": "OPEN SOURCE 100%"
+    }
+  },
+  {
+    "version": "1.5.35",
+    "files": {
+      "fb-chat-api/index.js": "fix: fca not working",
+      "fb-chat-api/src/listenMqtt.js": "fix: fca not working"
+    }
+  },
+  {
     "version": "4.0.0",
     "files": {
       "Aliya.js": "Updated project launcher and initialization for Aliya Official v4",
@@ -15,8 +33,22 @@
     },
     "contributors": [
       "Mr.king"
-    ],
-    "deleteFiles": {},
-    "reinstallDependencies": false
+    ]
+  },
+  {
+    "version": "4.0.1",
+    "files": {
+      "updater.js": "Fix version ordering and prevent applying older releases to V4 installations",
+      "scripts/cmds/cs.js": "List commands loaded by this Aliya installation instead of fetching a third-party store",
+      "scripts/cmds/update.js": "Load the checked-in updater without remote code evaluation",
+      "scripts/cmds/emojimix.js": "Read API service configuration from the Aliya repository",
+      "scripts/cmds/animequiz.js": "Read API service configuration from the Aliya repository",
+      "scripts/cmds/kicked.js": "Read API service configuration from the Aliya repository",
+      "scripts/cmds/pending.js": "Use Aliya as the default bot label",
+      "ApiUrl.json": "Host the API service map in the Aliya repository"
+    },
+    "contributors": [
+      "Mr.king"
+    ]
   }
 ]

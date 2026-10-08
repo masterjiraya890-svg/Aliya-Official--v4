@@ -9,7 +9,6 @@ function getLocalCommands() {
     const config = command && command.config ? command.config : {};
     return {
       cmd: config.name || name,
-      author: config.author || "Mr.king",
       version: config.version || "Local",
       category: config.category || "General"
     };
@@ -20,7 +19,7 @@ module.exports.config = {
   name: COMMAND_NAME,
   aliases: ["cmdstore", "commandstore", "commandlist"],
   author: "Mr.king",
-  version: "4.0.1",
+  version: "4.0.2",
   role: 2,
   countDown: 3,
   category: "owner",
@@ -48,7 +47,7 @@ module.exports.onStart = async function ({ api, event, args }) {
   let text = "ALIYA COMMANDS — Maintained by Mr.king\nPage " + page + "/" + totalPages + "\n";
   text += "Loaded locally: " + commands.length + "\n------------------------------\n";
   items.forEach((item, index) => {
-    text += (start + index + 1) + ". " + item.cmd + " | " + item.category + " | " + item.author + "\n";
+    text += (start + index + 1) + ". " + item.cmd + " | " + item.category + "\n";
   });
   if (page < totalPages) text += "\nNext page: /cs " + (page + 1);
   api.sendMessage(text, event.threadID, (err, info) => {
@@ -74,6 +73,6 @@ module.exports.onReply = async function ({ api, event, Reply }) {
     return api.sendMessage("Reply with a number from " + (start + 1) + " to " + end + ".", event.threadID, event.messageID);
   const item = Reply.commands[replyNum - 1];
   if (api.unsendMessage) api.unsendMessage(Reply.messageID);
-  const text = "ALIYA COMMAND\nName: " + item.cmd + "\nCategory: " + item.category + "\nAuthor: " + item.author + "\nVersion: " + item.version + "\nSource: installed locally";
+  const text = "ALIYA COMMAND\nName: " + item.cmd + "\nCategory: " + item.category + "\nVersion: " + item.version + "\nSource: installed locally";
   return api.sendMessage(text, event.threadID, event.messageID);
 };

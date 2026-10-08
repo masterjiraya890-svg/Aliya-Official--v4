@@ -21,8 +21,8 @@
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/masterjiraya890-svg/Aliya-Official--v4/main/dashboard/images/IMG-20261001-WA0001.jpg" width="260" />
-  <img src="https://raw.githubusercontent.com/masterjiraya890-svg/Aliya-Official--v4/main/dashboard/images/Messenger_creation_16.jpg" width="260" />
-  <img src="https://raw.githubusercontent.com/masterjiraya890-svg/Aliya-Official--v4/main/dashboard/images/received_199629683438.jpg" width="260" />
+  <img src="https://raw.githubusercontent.com/masterjiraya890-svg/Aliya-Official--v4/main/dashboard/images/received_1996296834388297.jpeg" width="260" />
+  <img src="https://raw.githubusercontent.com/masterjiraya890-svg/Aliya-Official--v4/main/dashboard/images/Messenger_creation_1651379096566239.jpeg" width="260" />
 </p>
 
 ---

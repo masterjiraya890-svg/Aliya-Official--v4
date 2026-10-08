@@ -20,6 +20,22 @@ const REPO_OWNER = "masterjiraya890-svg";
 const REPO_NAME = "Aliya-Official--v4";
 const BRANCH = "main";
 
+function parseVersion(version) {
+	const match = String(version || "").trim().match(/^v?(\d+)\.(\d+)\.(\d+)$/);
+	if (!match)
+		throw new Error("Invalid version in update history: " + version);
+	return match.slice(1).map(Number);
+}
+
+function compareVersions(left, right) {
+	const a = parseVersion(left);
+	const b = parseVersion(right);
+	for (let i = 0; i < 3; i++) {
+		if (a[i] !== b[i]) return a[i] - b[i];
+	}
+	return 0;
+}
+
 let pathLanguageFile = `${process.cwd()}/languages/${langCode}.lang`;
 if (!fs.existsSync(pathLanguageFile)) {
 	log.warn("LANGUAGE", `Can't find language file ${langCode}, using default language file "${path.normalize(`${process.cwd()}/languages/en.lang`)}"`);
@@ -137,16 +153,21 @@ fs.copyFileSync = function (src, dest) {
 			return log.error("ERROR", getText("updater", "updateTooFast", minutes, seconds));
 		}
 
-		const { data: versions } = await axios.get(`https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/versions.json`);
+		const { data: versionManifest } = await axios.get("https://raw.githubusercontent.com/" + REPO_OWNER + "/" + REPO_NAME + "/" + BRANCH + "/versions.json");
 		const currentVersion = require('./package.json').version;
-		const indexCurrentVersion = versions.findIndex(v => v.version === currentVersion);
-		if (indexCurrentVersion === -1)
-			return log.error("ERROR", getText("updater", "cantFindVersion", chalk.yellow(currentVersion)));
-		const versionsNeedToUpdate = versions.slice(indexCurrentVersion + 1);
+		if (!Array.isArray(versionManifest))
+			throw new Error("Invalid update history: expected a version list");
+		const orderedVersions = versionManifest.slice().sort((a, b) => compareVersions(a.version, b.version));
+		for (let i = 1; i < orderedVersions.length; i++) {
+			if (compareVersions(orderedVersions[i - 1].version, orderedVersions[i].version) === 0)
+				throw new Error("Duplicate version in update history: " + orderedVersions[i].version);
+		}
+		if (!orderedVersions.some(version => version.version === currentVersion))
+			return log.error("ERROR", "Current version " + chalk.yellow(currentVersion) + " is missing from update history. No update was applied.");
+		const versionsNeedToUpdate = orderedVersions.filter(version => compareVersions(version.version, currentVersion) > 0);
 		if (versionsNeedToUpdate.length === 0)
 			return log.info("SUCCESS", getText("updater", "latestVersion"));
-
-		fs.writeFileSync(`${process.cwd()}/versions.json`, JSON.stringify(versions, null, 2));
+		fs.writeFileSync(`${process.cwd()}/versions.json`, JSON.stringify(orderedVersions, null, 2));
 		log.info("UPDATE", getText("updater", "newVersions", chalk.yellow(versionsNeedToUpdate.length)));
 
 		const createUpdate = {
@@ -157,30 +178,21 @@ fs.copyFileSync = function (src, dest) {
 		};
 
 		for (const version of versionsNeedToUpdate) {
-			for (const filePath in version.files) {
+			const versionFiles = version.files || {};
+			for (const filePath in versionFiles) {
 				if (["config.json", "configCommands.json"].includes(filePath)) {
-					if (!createUpdate.files[filePath])
-						createUpdate.files[filePath] = {};
-
-					createUpdate.files[filePath] = {
-						...createUpdate.files[filePath],
-						...version.files[filePath]
-					};
+					if (!createUpdate.files[filePath]) createUpdate.files[filePath] = {};
+					createUpdate.files[filePath] = { ...createUpdate.files[filePath], ...versionFiles[filePath] };
+				} else {
+					createUpdate.files[filePath] = versionFiles[filePath];
 				}
-				else
-					createUpdate.files[filePath] = version.files[filePath];
-
-				if (version.reinstallDependencies)
-					createUpdate.reinstallDependencies = true;
-
-				if (createUpdate.deleteFiles[filePath])
-					delete createUpdate.deleteFiles[filePath];
-
-				for (const filePath in version.deleteFiles)
-					createUpdate.deleteFiles[filePath] = version.deleteFiles[filePath];
-
-				createUpdate.version = version.version;
+				if (createUpdate.deleteFiles[filePath]) delete createUpdate.deleteFiles[filePath];
 			}
+			for (const filePath in (version.deleteFiles || {}))
+				createUpdate.deleteFiles[filePath] = version.deleteFiles[filePath];
+			if (version.reinstallDependencies)
+				createUpdate.reinstallDependencies = true;
+			createUpdate.version = version.version;
 		}
 
 		const backupsPath = `${process.cwd()}/backups`;

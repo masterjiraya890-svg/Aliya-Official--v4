@@ -1,0 +1,160 @@
+# index.js
+Goat.newVersionDetected=🌸 𝑷𝒐𝒐𝒌𝒊𝒆! আপনি %1 ভার্সন ব্যবহার করছেন, লেটেস্ট ভার্সন %2! আপডেট করতে সিএমডিতে লিখুন: %3 🌷
+Goat.autoRestart1=🌸 বটটি %1 এর মধ্যে অটো রিস্টার্ট হবে 🎀
+Goat.autoRestart2=🧸 ক্রন জবের মাধ্যমে বট অটো রিস্টার্ট হবে: %1 ✨
+Goat.googleApiTokenExpired=🌷 Google API রিফ্রেশ টোকেনের মেয়াদ শেষ, নতুন টোকেন নিন: https://developers.google.com/oauthplayground/ ✨
+
+# bot/login/login.js
+login.currentlyLogged=🌸 লগইন প্রক্রিয়া চলছে কিউটি... 🧸
+login.notFoundDirAccount=🌸 %1 ফাইলটি খুঁজে পাওয়া যাচ্ছে না 🥺
+login.loginToken=🌷 অ্যাক্সেস টোকেন দিয়ে লগইন হচ্ছে ✨
+login.loginCookieString=🎀 কুকি স্ট্রিং দিয়ে লগইন হচ্ছে 🌸
+login.loginCookieNetscape=🤍 কুকি নেটস্কেপ দিয়ে লগইন হচ্ছে 🧸
+login.loginCookieArray=🍨 কুকি অ্যারে দিয়ে লগইন হচ্ছে 🌷
+login.loginPassword=✨ ইমেল ও পাসওয়ার্ড দিয়ে লগইন হচ্ছে... 🌸
+login.accountError=🌸 অনুগ্রহ করে %7 ফাইলে সঠিক ফরম্যাটে টোকেন বা কুকি দিন 🥺
+login.cannotFindAccount=🌸 ফেসবুক অ্যাকাউন্ট পাওয়া যায়নি, অনুগ্রহ করে একটি অপশন বেছে নিন:
+login.chooseAccount=🌷 ইমেল এবং পাসওয়ার্ড দিয়ে লগইন
+login.chooseToken=🎀 পারমিশন টোকেন দিয়ে লগইন
+login.chooseCookieString=✨ কুকি স্ট্রিং দিয়ে লগইন
+login.chooseCookieArray=🧸 কুকি অ্যারে দিয়ে লগইন
+login.loginWith=🌸 আপনি %1 অপশনটি বেছে নিয়েছেন ✨
+login.inputEmail=🌷 আপনার ফেসবুক অ্যাকাউন্টের ইমেল বা ফোন নম্বর দিন:
+login.inputPassword=🎀 আপনার অ্যাকাউন্টের পাসওয়ার্ড লিখুন:
+login.input2FA=✨ আপনার 2FA কোডটি দিন (না থাকলে খালি রাখুন):
+login.inputToken=🌸 আপনার ফুল পারমিশন টোকেনটি দিন:
+login.inputCookieString=🌷 আপনার কুকি স্ট্রিংটি দিন:
+login.inputCookieArray=🎀 আপনার কুকি অ্যারেটি দিন:
+login.refreshCookie=🌸 কুকি রিফ্রেশ করা হচ্ছে পুপি... 🧸
+login.refreshCookieError=🥺 কুকি রিফ্রেশ করার সময় সমস্যা হয়েছে!
+login.refreshCookieSuccess=✨ কুকি রিফ্রেশ সফল হয়েছে! বট রিস্টার্ট করুন 🌷
+login.refreshCookieWarning=⚠️ অটো রিফ্রেশ চালু আছে, কিন্তু config.json এ ইমেল ও পাসওয়ার্ড নেই 🥺
+login.tokenError=🥺 %2 ফাইলটির টোকেনটি অবৈধ বা মেয়াদ উত্তীর্ণ!
+login.cookieError=🥺 আপনার কুকিটি অবৈধ বা মেয়াদ উত্তীর্ণ!
+login.loginPasswordError=🥺 config.json এর ইমেল ও পাসওয়ার্ড দিয়ে লগইন করা যাচ্ছে না!
+login.loginSuccess=🌸 সফলভাবে লগইন হয়েছে পুপি! 💖
+login.loginError=🥺 লগইন করার সময় সমস্যা হয়েছে!
+login.openDashboardSuccess=🌷 বট ম্যানেজমেন্ট পেজ সফলভাবে খোলা হয়েছে! ✨
+login.openDashboardError=🥺 বট ম্যানেজমেন্ট পেজ খোলা যাচ্ছে না!
+login.changeGbanData=🌸 ডেটা পরিবর্তন হয়েছে, বর্তমানে বট চালু করা সম্ভব নয়! 🥺
+login.errorNoti=🥺 বার্তা খুঁজে পাওয়ার সময় সমস্যা হয়েছে!
+login.refreshFbstateSuccess=🌸 %1 ফাইলটি সফলভাবে রিফ্রেশ করা হয়েছে! ✨
+login.refreshFbstateError=🥺 %1 ফাইলটি রিফ্রেশ করার সময় সমস্যা হয়েছে!
+login.youAreBanned=🥺 আপনাকে Goat-Bot প্রোজেক্ট থেকে নিষিদ্ধ করা হয়েছে!
+login.checkGbanError=🥺 GBAN চেক করার সময় ত্রুটি হয়েছে, node update দিয়ে ট্রাই করুন!
+login.gbanMessage=🥺 Goat-Bot থেকে %1 তারিখে নিষিদ্ধ করা হয়েছে!\n» কারণ: %2\n» সময়: %3
+login.gbanMessageToDate=🥺 Goat-Bot থেকে %1 তারিখে নিষিদ্ধ করা হয়েছে!\n» কারণ: %2\n» সময়: %3\n» মেয়াদ: %4
+login.gbanAdminMessage=🌸 ব্যবহারকারী %1 কে %2 তারিখে ব্যান করা হয়েছে! কারণ: %3 🥺
+login.openServerUptimeSuccess=🚀 আপটাইম সার্ভার চালু হয়েছে: %1 ✨
+login.openServerUptimeError=🥺 আপটাইম সার্ভার চালু করা সম্ভব হচ্ছে না!
+login.restartListenMessage=🌸 প্রতি %1 পর পর ListenMQTT রিস্টার্ট চালু করা হলো 🧸
+login.stopRestartListenMessage=🌷 ListenMQTT রিস্টার্ট বন্ধ করা হয়েছে ✨
+login.restartListenMessageError=🥺 ListenMQTT রিস্টার্ট করতে সমস্যা হয়েছে!
+login.restartListenMessage2=✨ ListenMQTT সফলভাবে রিস্টার্ট হয়েছে! 🌸
+login.refreshCookieAfter=🎀 %1 পর কুকি রিফ্রেশ করা হবে 🌷
+login.listenMqttClose=🌸 ListenMQTT বন্ধ হয়েছে 🧸
+login.listenMqttCloseByUser=🌷 ইউজার দ্বারা ListenMQTT বন্ধ করা হয়েছে ✨
+login.retryCheckLiveCookie=🎀 কুকি পুনরায় চেক করা হচ্ছে... %1 🌸
+login.startBotSuccess=🌸 𝑷𝒐𝒐𝒌𝒊𝒆 𝑩𝒐𝒕 এখন পুরোপুরি অ্যাক্টিভ ও রেডি! 💖✨
+
+version.tooOldVersion=🌸 আপনার বট ভার্সন অনেক পুরোনো! লেটেস্ট ভার্সন পেতে কমান্ডটি লিখুন: %1 🌷
+
+# bot/custom.js
+custom.refreshedFb_dtsg=🌸 fb_dtsg এবং jazoest সফলভাবে রিফ্রেশ হয়েছে! ✨
+custom.refreshedFb_dtsgError=🥺 fb_dtsg এবং jazoest রিফ্রেশে ত্রুটি হয়েছে!
+
+# bot/login/loadData.js
+loadData.loadThreadDataSuccess=🌸 %1 টি গ্রুপের ডেটা সফলভাবে লোড হয়েছে! 🌷
+loadData.loadUserDataSuccess=🎀 %1 জন ইউজারের ডেটা সফলভাবে লোড হয়েছে! ✨
+loadData.refreshingThreadData=🧸 গ্রুপগুলির তথ্য আপডেট করা হচ্ছে... 🌸
+loadData.refreshThreadDataSuccess=✨ %1 টি গ্রুপের তথ্য আপডেট সফল হয়েছে! 🌷
+loadData.refreshThreadDataError=🥺 গ্রুপ ডেটা আপডেট করার সময় সমস্যা হয়েছে!
+
+# bot/login/loadScripts.js
+loadScripts.loadScriptsError=🥺 %1 টি ফাইল লোড করার সময় ত্রুটি হয়েছে:
+loadScripts.loadScriptsNotMatchOrigin=⚠️ %1 টি ফাইল আসল গিটহাব সোর্সের সাথে মিলছে না:
+loadScripts.NOT_FOUND=🌸 মূল সোর্স কোডে পাওয়া যায়নি:
+loadScripts.NOT_MATCH=🌷 মূল সোর্স কোডের সাথে মিল নেই:
+
+# bot/login/socketIO.js
+socketIO.connected=🌸 socket.io সার্ভারে কানেক্ট হয়েছে ✨
+socketIO.error=🥺 socket.io সার্ভারে কানেক্ট হতে ত্রুটি হয়েছে!
+
+# bot/handler/handlerCheckData.js
+handlerCheckData.cantCreateThread=🥺 আইডি '%1' গ্রুপটিকে ডেটাবেসে সেভ করা যাচ্ছে না!
+handlerCheckData.cantCreateUser=🥺 আইডি '%1' ইউজারকে ডেটাবেসে সেভ করা যাচ্ছে না!
+
+# bot/handler/handlerEvents.js
+handlerEvents.userBanned=🚫 ─── 𝑩𝑨𝑵𝑵𝑬𝑫 𝑼𝑺𝑬𝑹 ─── 🌸\n╭──────────────────⬣\n│ 🥺 আপনাকে বট ব্যবহারে নিষিদ্ধ করা হয়েছে\n│ 📌 কারণ: %1\n│ ⏰ সময়: %2\n│ 👤 ইউজার আইডি: %3\n╰──────────────────⬣
+handlerEvents.threadBanned=🚫 ─── 𝑩𝑨𝑵𝑵𝑬𝑫 𝑮𝑹𝑑𝑼𝑷 ─── 🌷\n╭──────────────────⬣\n│ 🥺 এই গ্রুপটি ব্যান করা হয়েছে\n│ 📌 কারণ: %1\n│ ⏰ সময়: %2\n│ 🏠 থ্রেড আইডি: %3\n╰──────────────────⬣
+handlerEvents.onlyAdminBox=🔒 🌸 এই গ্রুপে শুধুমাত্র অ্যাডমিনরা বট ব্যবহার করতে পারবে! 🎀
+handlerEvents.onlyAdminBot=👑 🌸 বর্তমানে শুধুমাত্র বট অ্যাডমিনরা বট ব্যবহার করতে পারবে! ✨
+handlerEvents.onlyDeveloperGlobal=⚙️ 🌷 বর্তমানে শুধুমাত্র ডেভলপাররা বট ব্যবহার করতে পারবে! 🧸
+handlerEvents.onlyVipUserGlobal=💎 🎀 বর্তমানে শুধুমাত্র ভিআইপি ইউজাররা বট ব্যবহার করতে পারবে! ✨
+handlerEvents.commandNotFound=🌸 ─── 𝑵𝑶𝑻 𝑭𝑶𝑼𝑵𝑫 ─── 🌷\n╭──────────────────⬣\n│ ❌ "%1" কমান্ডটি খুঁজে পাওয়া যায়নি!\n│ 💡 সকল কমান্ড দেখতে টাইপ করুন: %2help ✨\n╰──────────────────⬣
+handlerEvents.commandNotFound2=🌸 ─── 𝑵𝑶𝑻 𝑭𝑶𝑼𝑵𝑫 ─── 🌷\n╭──────────────────⬣\n│ ❌ ভুল কমান্ড ব্যবহার করেছেন!\n│ 💡 সকল কমান্ড দেখতে টাইপ করুন: %1help ✨\n╰──────────────────⬣
+handlerEvents.commandNotFoundSuggestion=🧐 🌸 কমান্ডটি খুঁজে পাওয়া যায়নি!\n\n💖 আপনি কি %2%1 বোঝাতে চেয়েছেন?
+handlerEvents.commandSyntaxError=⚠️ 🌸 কমান্ডের গঠন ভুল হয়েছে! ব্যবহার দেখতে টাইপ করুন: %1help %2 🌷
+handlerEvents.onlyAdmin=❌ 🌸 শুধুমাত্র গ্রুপ অ্যাডমিনরা "%1" কমান্ড ব্যবহার করতে পারবে 🎀
+handlerEvents.onlyAdminToUseOnReply=❌ 🌸 শুধুমাত্র গ্রুপ অ্যাডমিনরা "%1" এ রিপ্লাই দিতে পারবে 🌷
+handlerEvents.onlyAdminToUseOnReaction=❌ 🌸 শুধুমাত্র গ্রুপ অ্যাডমিনরা "%1" এ রিঅ্যাক্ট দিতে পারবে ✨
+handlerEvents.onlyAdminBot2=💫 🌸 শুধুমাত্র বট অ্যাডমিনরা "%1" কমান্ডটি ব্যবহার করতে পারবে 🧸
+handlerEvents.onlyAdminBot2ToUseOnReply=💫 🌸 শুধুমাত্র বট অ্যাডমিনরা "%1" এ রিপ্লাই দিতে পারবে 🌷
+handlerEvents.onlyAdminBot2ToUseOnReaction=💫 🌸 শুধুমাত্র বট অ্যাডমিনরা "%1" এ রিঅ্যাক্ট দিতে পারবে ✨
+handlerEvents.onlyDeveloper=⚙️ 🌸 শুধুমাত্র বট ডেভেলপাররা "%1" কমান্ড ব্যবহার করতে পারবে 🎀
+handlerEvents.onlyDeveloperToUseOnReply=⚙️ 🌸 শুধুমাত্র বট ডেভেলপাররা "%1" এ রিপ্লাই দিতে পারবে 🌷
+handlerEvents.onlyDeveloperToUseOnReaction=⚙️ 🌸 শুধুমাত্র বট ডেভেলপাররা "%1" এ রিঅ্যাক্ট দিতে পারবে ✨
+handlerEvents.onlyVipUser=💎 🌸 শুধুমাত্র ভিআইপি ইউজাররা "%1" কমান্ড ব্যবহার করতে পারবে 🧸
+handlerEvents.onlyVipUserToUseOnReply=💎 🌸 শুধুমাত্র ভিআইপি ইউজাররা "%1" এ রিপ্লাই দিতে পারবে 🌷
+handlerEvents.onlyVipUserToUseOnReaction=💎 🌸 শুধুমাত্র ভিআইপি ইউজাররা "%1" এ রিঅ্যাক্ট দিতে পারবে ✨
+handlerEvents.waitingForCommand=⏱ 🌸 𝑷𝒐𝒐𝒌𝒊𝒆! একটু অপেক্ষা করুন, %1 সেকেন্ড পর আবার চেষ্টা করুন 🎀
+handlerEvents.errorOccurred=❌ [ %1 ]\n🥺 "%2" কমান্ডে সমস্যা হয়েছে:\n\n%3
+handlerEvents.errorOccurred2=❌ [ %1 ]\n🥺 "%2" কমান্ডের onChat এ সমস্যা হয়েছে:\n\n%3
+handlerEvents.errorOccurred3=❌ [ %1 ]\n🥺 "%2" কমান্ডের onReply এ সমস্যা হয়েছে:\n\n%3
+handlerEvents.errorOccurred4=❌ [ %1 ]\n🥺 "%2" কমান্ডের onReaction এ সমস্যা হয়েছে:\n\n%3
+handlerEvents.errorOccurred5=❌ [ %1 ]\n🥺 "%2" কমান্ডের onEvent এ সমস্যা হয়েছে:\n\n%3
+handlerEvents.errorOccurred6=❌ [ %1 ]\n🥺 "%2" কমান্ডের onEvent এ সমস্যা হয়েছে:\n\n%3
+handlerEvents.errorOccurred7=❌ [ %1 ]\n🥺 "%2" কমান্ডের onAnyEvent এ সমস্যা হয়েছে:\n\n%3
+handlerEvents.cannotFindCommandName=❌ 🌸 রিপ্লাই দেওয়ার জন্য কমান্ডের নাম পাওয়া যায়নি! 🥺
+handlerEvents.cannotFindCommand=❌ 🌸 রিপ্লাই এর জন্য "%1" কমান্ডটি খুঁজে পাওয়া যায়নি! 🥺
+
+# bot/autoUptime.js
+autoUptime.autoUptimeTurnedOn=🌸 অটো-আপটাইম মোড চালু করা হয়েছে! ✨
+
+# database/controller/index.js
+indexController.connectingMongoDB=🌸 MongoDB ডেটাবেসের সাথে কানেক্ট করা হচ্ছে... 🧸
+indexController.connectMongoDBSuccess=✨ MongoDB ডেটাবেসে সফলভাবে কানেক্ট হয়েছে! 🌸
+indexController.connectMongoDBError=🥺 MongoDB ডেটাবেসে কানেক্ট হতে সমস্যা হয়েছে:
+indexController.connectingMySQL=🌸 SQLite ডেটাবেসের সাথে কানেক্ট করা হচ্ছে... 🧸
+indexController.connectMySQLSuccess=✨ SQLite ডেটাবেসে সফলভাবে কানেক্ট হয়েছে! 🌸
+indexController.connectMySQLError=🥺 SQLite ডেটাবেসে কানেক্ট হতে সমস্যা হয়েছে:
+
+# updater.js
+updater.updateTooFast=🌸 আপডেট করার জন্য অন্তত %1 মিনিট %2 সেকেন্ড অপেক্ষা করুন পুপি! 🎀
+updater.latestVersion=🌸 আপনি লেটেস্ট ভার্সন ব্যবহার করছেন কিউটি! ✨
+updater.cantFindVersion=🥺 package.json ফাইলে অজানা ভার্সন (%1) রয়েছে!
+updater.newVersions=✨ %1 টি নতুন আপডেট পাওয়া গেছে, প্রসেসিং শুরু হচ্ছে... 🌸
+updater.updateSuccess=🌸 আপডেট সফলভাবে সম্পন্ন হয়েছে%1 💖
+updater.configChanged=🌸 %1 ফাইলটি পরিবর্তিত হয়েছে, config.json চেক করুন! 🌷
+updater.installingPackages=🧸 প্রয়োজনীয় প্যাকেজগুলি ইন্সটল করা হচ্ছে... 🌸
+updater.installSuccess=✨ প্যাকেজ সফলভাবে ইন্সটল হয়েছে! প্রয়োগ করতে বট রিস্টার্ট করুন 🌷
+updater.backupSuccess=🌸 পরিবর্তিত ফাইলগুলি %1 ফোল্ডারে ব্যাকআপ করা হয়েছে ✨
+updater.restartToApply=🎀 নতুন আপডেট কার্যকর করতে বট রিস্টার্ট করুন! 🌸
+updater.skipFile=🌷 কমেন্ট থাকার কারণে %1 ফাইলটি আপডেট স্কিপ করা হয়েছে 🌸
+
+# dashboard/routes/verifyfbid.js
+verifyfbid.sendCode=🌸 𝒀𝒐𝒖𝒓 𝑽𝒆𝒓𝒊𝒇𝒊𝒄𝒂𝒕𝒊𝒐𝒏 𝑪𝒐𝒅𝒆 🌸\n╭──────────────────⬣\n│ 🔑 কোড : %1\n│ ⏰ মেয়াদ : %2 মিনিট\n╰──────────────────⬣
+
+# utils.js
+utils.errorOccurred=❌ 🌸 একটি সমস্যা দেখা দিয়েছে পুপি:\n\n%1
+
+# for command
+command.restartedBot=🌸 𝑷𝒐𝒐𝒌𝒊𝒆 𝑩𝒐𝒕 সফলভাবে রিস্টার্ট হয়েছে! ✨💖
+
+# dashboard/app.js
+app.googleApiRefreshTokenExpired=🌷 Google API টোকেনের মেয়াদ শেষ, নতুন টোকেন নিন! ✨
+app.tooManyRequests=🌸 খুব দ্রুত অনেক মেসেজ এসেছে, কিছুক্ষন পর চেষ্টা করুন 🥺
+app.notPermissionChangeFbstate=❌ fbstate পরিবর্তন করার পারমিশন আপনার নেই! 🥺
+app.notFoundFbstate=🌸 অনুগ্রহ করে fbstate দিন! 🌷
+app.changedFbstateSuccess=✨ fbstate সফলভাবে পরিবর্তন করা হয়েছে! 🌸
+app.serverError=🥺 সার্ভারে সমস্যা হয়েছে, একটু পর ট্রাই করুন!

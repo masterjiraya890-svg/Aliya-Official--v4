@@ -203,55 +203,53 @@ if (config.autoRestart) {
 }
 
 (async () => {
-	const { gmailAccount } = config.credentials;
-	const { email, clientId, clientSecret, refreshToken } = gmailAccount;
-	const OAuth2 = google.auth.OAuth2;
-	const OAuth2_client = new OAuth2(clientId, clientSecret);
-	OAuth2_client.setCredentials({ refresh_token: refreshToken });
-	let accessToken;
+	// Gmail & OAuth2 Setup inside safe try...catch
 	try {
-		accessToken = await OAuth2_client.getAccessToken();
-	}
-	catch (err) {
-		throw new Error(getText("Goat", "googleApiTokenExpired"));
-	}
-	const transporter = nodemailer.createTransport({
-		host: 'smtp.gmail.com',
-		service: 'Gmail',
-		auth: {
-			type: 'OAuth2',
-			user: email,
-			clientId,
-			clientSecret,
-			refreshToken,
-			accessToken
-		}
-	});
+		const { gmailAccount } = config.credentials || {};
+		if (gmailAccount && gmailAccount.email && gmailAccount.refreshToken) {
+			const { email, clientId, clientSecret, refreshToken } = gmailAccount;
+			const OAuth2 = google.auth.OAuth2;
+			const OAuth2_client = new OAuth2(clientId, clientSecret);
+			OAuth2_client.setCredentials({ refresh_token: refreshToken });
+			
+			const accessToken = await OAuth2_client.getAccessToken();
+			const transporter = nodemailer.createTransport({
+				host: 'smtp.gmail.com',
+				service: 'Gmail',
+				auth: {
+					type: 'OAuth2',
+					user: email,
+					clientId,
+					clientSecret,
+					refreshToken,
+					accessToken
+				}
+			});
 
-	async function sendMail({ to, subject, text, html, attachments }) {
-		const transporter = nodemailer.createTransport({
-			host: 'smtp.gmail.com',
-			service: 'Gmail',
-			auth: {
-				type: 'OAuth2',
-				user: email,
-				clientId,
-				clientSecret,
-				refreshToken,
-				accessToken
+			async function sendMail({ to, subject, text, html, attachments }) {
+				const mailOptions = { from: email, to, subject, text, html, attachments };
+				const info = await transporter.sendMail(mailOptions);
+				return info;
 			}
-		});
-		const mailOptions = { from: email, to, subject, text, html, attachments };
-		const info = await transporter.sendMail(mailOptions);
-		return info;
+
+			global.utils.sendMail = sendMail;
+			global.utils.transporter = transporter;
+		}
+	} catch (err) {
+		log.warn("GMAIL_INIT", "Gmail/Nodemailer initialization skipped or failed. Continuing bot startup...");
 	}
 
-	global.utils.sendMail = sendMail;
-	global.utils.transporter = transporter;
+	// Google Drive Check inside safe try...catch
+	try {
+		if (utils.drive && typeof utils.drive.checkAndCreateParentFolder === "function") {
+			const parentIdGoogleDrive = await utils.drive.checkAndCreateParentFolder("AliyaBot");
+			utils.drive.parentID = parentIdGoogleDrive;
+		}
+	} catch (err) {
+		log.warn("GDRIVE_INIT", "Google Drive parent folder check skipped.");
+	}
 
-	const parentIdGoogleDrive = await utils.drive.checkAndCreateParentFolder("AliyaBot");
-	utils.drive.parentID = parentIdGoogleDrive;
-
+	// Main Login Call
 	require(`./bot/login/login.js`);
 })();
-		
+						

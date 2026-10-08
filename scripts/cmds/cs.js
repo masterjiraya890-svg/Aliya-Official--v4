@@ -1,121 +1,79 @@
-const axios = require("axios");
-const fs = require("fs");
-const path = require("path");
-
-const cmdsInfoUrl = "https://raw.githubusercontent.com/Saim-x69x/sakura/main/cmdsinfo.json";
-const cmdsUrlJson = "https://raw.githubusercontent.com/Saim-x69x/sakura/main/cmdsurl.json";
-const fontUrl = "https://raw.githubusercontent.com/Saim-x69x/sakura/main/xfont.json";
 const ITEMS_PER_PAGE = 10;
+const COMMAND_NAME = "cs";
 
-let fontMap = {};
-async function loadFont() {
-  try {
-    const res = await axios.get(fontUrl);
-    fontMap = res.data;
-  } catch (err) {
-    console.error("Failed to load font.json:", err);
-  }
-}
-
-function toBold(text) {
-  return text.split("").map(ch => fontMap[ch] || ch).join("");
+function getLocalCommands() {
+  const registry = global.GoatBot && global.GoatBot.commands;
+  if (!registry) return [];
+  const entries = typeof registry.entries === "function" ? Array.from(registry.entries()) : Object.entries(registry);
+  return entries.map(([name, command]) => {
+    const config = command && command.config ? command.config : {};
+    return {
+      cmd: config.name || name,
+      author: config.author || "Mr.king",
+      version: config.version || "Local",
+      category: config.category || "General"
+    };
+  }).sort((a, b) => a.cmd.localeCompare(b.cmd));
 }
 
 module.exports.config = {
-  name: "cs",
-  aliases: ["cmdstore", "commandstore", "sakurastore"],
-  author: "Saimx69x",
-  version: "2.0",
+  name: COMMAND_NAME,
+  aliases: ["cmdstore", "commandstore", "commandlist"],
+  author: "Mr.king",
+  version: "4.0.1",
   role: 2,
   countDown: 3,
   category: "owner",
-  shortDescription: "Sakura Command Store",
-  longDescription: "Access bot commands list and their URLs.",
-  guide: { en: "Usage: /cs [command | letter | page]" }
+  shortDescription: "Aliya command list",
+  longDescription: "Browse commands loaded from this Aliya bot installation.",
+  guide: { en: "Usage: /cs [search | page]" }
 };
 
 module.exports.onStart = async function ({ api, event, args }) {
-  await loadFont();
+  const allCommands = getLocalCommands();
   const query = args.join(" ").trim().toLowerCase();
-
-  try {
-    const response = await axios.get(cmdsInfoUrl);
-    let cmds = response.data.cmdName;
-    let finalArray = cmds;
-    let page = 1;
-
-    if (query) {
-      if (!isNaN(query)) {
-        page = parseInt(query);
-      } else if (query.length === 1) {
-        finalArray = cmds.filter(c => c.cmd.toLowerCase().startsWith(query));
-      } else {
-        finalArray = cmds.filter(c => c.cmd.toLowerCase().includes(query));
-      }
-      if (finalArray.length === 0)
-        return api.sendMessage(`❌ ${toBold(`No command found for "${query}"`)}`, event.threadID, event.messageID);
-    }
-
-    const totalPages = Math.ceil(finalArray.length / ITEMS_PER_PAGE);
-    if (page < 1 || page > totalPages)
-      return api.sendMessage(`❌ ${toBold(`Invalid page number (1-${totalPages})`)}`, event.threadID, event.messageID);
-
-    const start = (page - 1) * ITEMS_PER_PAGE;
-    const end = start + ITEMS_PER_PAGE;
-    const cmdsToShow = finalArray.slice(start, end);
-
-    let msg = `━━━━━━━━━━━━━━\n🌸 ${toBold("Sakura Command Store")}\n━━━━━━━━━━━━━━\n📄 ${toBold(`Page: ${page}/${totalPages}`)}\n🧩 ${toBold(`Total: ${finalArray.length} Cmds`)}\n────────────────\n`;
-
-    cmdsToShow.forEach((cmd, i) => {
-      msg += `💠  ${toBold(`${start + i + 1}. ${cmd.cmd}`)}\n👨‍💻 ${toBold(`Author: ${cmd.author}`)}\n🕓 ${toBold(`Update: ${cmd.update || "Unknown"}`)}\n────────────────\n`;
-    });
-
-    msg += `📑 ${toBold(`Type "/${this.config.name} ${page + 1}" for next page.`)}\n━━━━━━━━━━━━━━`;
-
-    api.sendMessage(msg, event.threadID, (err, info) => {
-      global.GoatBot.onReply.set(info.messageID, {
-        commandName: this.config.name,
-        type: "reply",
-        messageID: info.messageID,
-        author: event.senderID,
-        cmdName: finalArray,
-        page
-      });
-    }, event.messageID);
-
-  } catch (err) {
-    console.error(err);
-    api.sendMessage(`❌ ${toBold("Failed to load command list!")}`, event.threadID, event.messageID);
+  let commands = allCommands;
+  let page = 1;
+  if (query) {
+    if (/^\d+$/.test(query)) page = Number(query);
+    else commands = allCommands.filter(item => item.cmd.toLowerCase().includes(query));
   }
+  if (commands.length === 0)
+    return api.sendMessage("No local Aliya commands found for this search.", event.threadID, event.messageID);
+  const totalPages = Math.ceil(commands.length / ITEMS_PER_PAGE);
+  if (page < 1 || page > totalPages)
+    return api.sendMessage("Invalid page number. Choose 1-" + totalPages + ".", event.threadID, event.messageID);
+  const start = (page - 1) * ITEMS_PER_PAGE;
+  const items = commands.slice(start, start + ITEMS_PER_PAGE);
+  let text = "ALIYA COMMANDS — Maintained by Mr.king\nPage " + page + "/" + totalPages + "\n";
+  text += "Loaded locally: " + commands.length + "\n------------------------------\n";
+  items.forEach((item, index) => {
+    text += (start + index + 1) + ". " + item.cmd + " | " + item.category + " | " + item.author + "\n";
+  });
+  if (page < totalPages) text += "\nNext page: /cs " + (page + 1);
+  api.sendMessage(text, event.threadID, (err, info) => {
+    if (err || !info || !global.GoatBot || !global.GoatBot.onReply) return;
+    global.GoatBot.onReply.set(info.messageID, {
+      commandName: COMMAND_NAME,
+      type: "reply",
+      messageID: info.messageID,
+      author: event.senderID,
+      commands,
+      page
+    });
+  }, event.messageID);
 };
 
 module.exports.onReply = async function ({ api, event, Reply }) {
-  await loadFont();
-  if (Reply.author !== event.senderID)
-    return api.sendMessage(toBold("Gowk Gowk Gowk"), event.threadID, event.messageID);
-
-  const replyNum = parseInt(event.body);
+  if (!Reply || Reply.author !== event.senderID)
+    return api.sendMessage("This command reply is not for your account.", event.threadID, event.messageID);
+  const replyNum = Number.parseInt(event.body, 10);
   const start = (Reply.page - 1) * ITEMS_PER_PAGE;
-  const end = start + ITEMS_PER_PAGE;
-
-  if (isNaN(replyNum) || replyNum < start + 1 || replyNum > end)
-    return api.sendMessage(toBold(`❌ Please reply between ${start + 1} and ${Math.min(end, Reply.cmdName.length)}.`), event.threadID, event.messageID);
-
-  try {
-    const cmdName = Reply.cmdName[replyNum - 1].cmd;
-    const { status } = Reply.cmdName[replyNum - 1];
-    const response = await axios.get(cmdsUrlJson);
-    const cmdUrl = response.data[cmdName];
-
-    if (!cmdUrl)
-      return api.sendMessage(toBold("❌ Command URL not found!"), event.threadID, event.messageID);
-
-    api.unsendMessage(Reply.messageID);
-    const msg = `━━━━━━━━━━━━━━\n📘 ${toBold("Command Info")}\n━━━━━━━━━━━━━━\n🧩 ${toBold(`Name: ${cmdName}`)}\n⚙️ ${toBold(`Status: ${status || "Unavailable"}`)}\n🌐 URL: ${cmdUrl}\n━━━━━━━━━━━━━━`;
-
-    api.sendMessage(msg, event.threadID, event.messageID);
-  } catch (err) {
-    console.error(err);
-    api.sendMessage(toBold("❌ Failed to fetch command URL!"), event.threadID, event.messageID);
-  }
+  const end = Math.min(start + ITEMS_PER_PAGE, Reply.commands.length);
+  if (!Number.isInteger(replyNum) || replyNum < start + 1 || replyNum > end)
+    return api.sendMessage("Reply with a number from " + (start + 1) + " to " + end + ".", event.threadID, event.messageID);
+  const item = Reply.commands[replyNum - 1];
+  if (api.unsendMessage) api.unsendMessage(Reply.messageID);
+  const text = "ALIYA COMMAND\nName: " + item.cmd + "\nCategory: " + item.category + "\nAuthor: " + item.author + "\nVersion: " + item.version + "\nSource: installed locally";
+  return api.sendMessage(text, event.threadID, event.messageID);
 };

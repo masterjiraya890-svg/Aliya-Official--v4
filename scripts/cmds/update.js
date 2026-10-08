@@ -3,7 +3,7 @@ const path = require("path");
 module.exports = {
   config: {
     name: "update",
-    version: "4.0.1",
+    version: "4.0.2",
     author: "Mr.king",
     countDown: 5,
     role: 4,

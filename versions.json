@@ -50,5 +50,19 @@
     "contributors": [
       "Mr.king"
     ]
+  },
+  {
+    "version": "4.0.2",
+    "files": {
+      "bot/login/login.js": "Show Aliya Official V4 and Mr.king in the startup display",
+      "dashboard/views/partials/footer.eta": "Use Aliya Official V4 branding and repository links",
+      "DOCS.md": "Point documentation links to the Aliya repository",
+      "STEP_INSTALL.md": "Use Aliya V4 branding and clone instructions",
+      "scripts/cmds/cs.js": "Keep the local Aliya command list branded consistently",
+      "scripts/cmds/update.js": "Match the Aliya V4.0.2 release version"
+    },
+    "contributors": [
+      "Mr.king"
+    ]
   }
 ]

@@ -89,7 +89,7 @@ module.exports = {
 
         const targetThread = Reply.pending[parseInt(i) - 1].threadID;
         const prefix = global.utils.getPrefix(targetThread);
-        const nickNameBot = global.GoatBot.config.nickNameBot || "Sakura Bot";
+        const nickNameBot = global.GoatBot.config.nickNameBot || "Aliya Bot";
 
         try {
           await api.changeNickname(nickNameBot, targetThread, BOT_UID);

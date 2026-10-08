@@ -1,77 +1,91 @@
- 
 module.exports = {
   config: {
     name: "npx",
-    version: "1.0.0",
-    author: "Aliya",
+    aliases: ["noprefix"],
+    version: "4.0.0",
+    author: "Mr.king",
     countDown: 2,
-    role: 0,
-    shortDescription: "Run commands without prefix",
-    longDescription: "Enable or disable prefixless command usage",
-    category: "system"
+    role: 1, // Minimum Group Admin required to configure
+    shortDescription: "Manage prefixless command system in v4",
+    category: "system",
+    guide: "{pn} all | {pn} <cmd_name> | {pn} role <0-4> | {pn} off"
   },
 
   onStart: async function ({ message, args, event, threadsData }) {
-    if (!args[0]) {
+    const threadID = event.threadID;
+    let npxConfig = (await threadsData.get(threadID, "data.npxConfig")) || {
+      all: false,
+      commands: [],
+      roles: []
+    };
+
+    const action = args[0]?.toLowerCase();
+
+    if (!action) {
+      const statusText = 
+`𓍢ִ໋🌸✧ ── ͟͟͞͞Aʟɪʏᴀ v4 NPX Sᴇᴛᴛɪɴɢs ── ✧🌸𓍢ִ໋🌷͙֒  
+
+ᥫ᭡ Aʟʟ Cᴏᴍᴍᴀɴᴅs : ${npxConfig.all ? "🟢 Enabled" : "🔴 Disabled"}
+ᥫ᭡ Pʀᴇғɪxʟᴇss Cᴍᴅs : ${npxConfig.commands.length > 0 ? npxConfig.commands.join(", ") : "None"}
+ᥫ᭡ Aʟʟᴏᴡᴇᴅ Rᴏʟᴇs : ${npxConfig.roles.length > 0 ? npxConfig.roles.join(", ") : "None"}
+
+𓍢ִ໋🌷 Sʏɴᴛᴀx U sᴀɢᴇ:
+ ᥫ᭡ {pn} all ── Tᴏɢɢʟᴇ ᴀʟʟ ᴄᴏᴍᴍᴀɴᴅs
+ ᥫ᭡ {pn} <cmd> ── Tᴏɢɢʟᴇ sᴘᴇᴄɪғɪᴄ ᴄᴏᴍᴍᴀɴᴅ
+ ᥫ᭡ {pn} role <0-4> ── Set role access
+ ᥫ᭡ {pn} off ── Rᴇsᴇᴛ ᴀʟʟ NPX sᴇᴛᴛɪɴɢs`;
+      return message.reply(statusText);
+    }
+
+    if (action === "all") {
+      npxConfig.all = !npxConfig.all;
+      await threadsData.set(threadID, npxConfig, "data.npxConfig");
       return message.reply(
-        "❌ Usage:\n" +
-        "npx <command> → Enable prefixless mode\n" +
-        "npx -r <command> → Disable prefixless mode"
+        `𓍢ִ໋🌸✧ NPX All-Commands Mode is now ${npxConfig.all ? "🟢 ENABLED" : "🔴 DISABLED"}!`
       );
     }
 
-    const threadID = event.threadID;
-    const command = args[0] === "-r" ? args[1] : args[0];
-
-    if (!command) {
-      return message.reply("❌ Command name missing!");
+    if (action === "off" || action === "reset") {
+      npxConfig = { all: false, commands: [], roles: [] };
+      await threadsData.set(threadID, npxConfig, "data.npxConfig");
+      return message.reply("𓍢ִ໋🌸✧ All NPX prefixless settings have been reset!");
     }
 
-    let data = await threadsData.get(threadID, "data.npx");
+    if (action === "role") {
+      const targetRole = parseInt(args[1]);
+      if (isNaN(targetRole) || targetRole < 0 || targetRole > 4) {
+        return message.reply("⚠️ Invalid role! Allowed values: 0 (All), 1 (Admin), 2 (VIP), 3 (Bot Admin), 4 (Dev)");
+      }
 
-    if (!data) data = {};
-
-    // Remove prefixless command
-    if (args[0] === "-r") {
-      delete data[command.toLowerCase()];
-
-      await threadsData.set(threadID, data, "data.npx");
-
-      return message.reply(
-        `✅ ${command} এখন আবার prefix দিয়ে ব্যবহার করতে হবে।`
-      );
+      if (npxConfig.roles.includes(targetRole)) {
+        npxConfig.roles = npxConfig.roles.filter((r) => r !== targetRole);
+        await threadsData.set(threadID, npxConfig, "data.npxConfig");
+        return message.reply(`𓍢ִ໋🌸✧ Role level [ ${targetRole} ] removed from NPX mode.`);
+      } else {
+        npxConfig.roles.push(targetRole);
+        await threadsData.set(threadID, npxConfig, "data.npxConfig");
+        return message.reply(`𓍢ִ໋🌸✧ Role level [ ${targetRole} ] granted prefixless access!`);
+      }
     }
 
-    // Enable prefixless command
-    data[command.toLowerCase()] = true;
+    // Toggle specific command
+    const targetCmd = action.toLowerCase();
+    const commandExists = global.GoatBot.commands.get(targetCmd) || global.GoatBot.commands.get(global.GoatBot.aliases.get(targetCmd));
 
-    await threadsData.set(threadID, data, "data.npx");
+    if (!commandExists) {
+      return message.reply(`❌ Command or alias "${targetCmd}" does not exist in bot registry!`);
+    }
 
-    return message.reply(
-      `✅ ${command} এখন prefix ছাড়া ব্যবহার করা যাবে!\n\nExample: ${command}`
-    );
-  },
+    const realCmdName = commandExists.config.name;
 
-  onChat: async function ({ event, message, threadsData, commandName }) {
-    if (!event.body) return;
-
-    const text = event.body.trim();
-    if (!text) return;
-
-    const threadID = event.threadID;
-    const data = await threadsData.get(threadID, "data.npx");
-
-    if (!data || Object.keys(data).length === 0) return;
-
-    const firstWord = text.split(/\s+/)[0].toLowerCase();
-
-    if (!data[firstWord]) return;
-
-    // Existing command system যেন এটাকে normal command হিসেবে process করতে পারে
-    if (commandName === firstWord) return;
-
-    return message.reply(
-      `⚠️ "${firstWord}" prefixless mode-এ enabled আছে, কিন্তু তোমার GoatBot v2-এর command handler থেকে সরাসরি execute করার জন্য custom handler লাগবে।`
-    );
+    if (npxConfig.commands.includes(realCmdName)) {
+      npxConfig.commands = npxConfig.commands.filter((c) => c !== realCmdName);
+      await threadsData.set(threadID, npxConfig, "data.npxConfig");
+      return message.reply(`𓍢ִ໋🌸✧ Prefixless mode disabled for command: "${realCmdName}"`);
+    } else {
+      npxConfig.commands.push(realCmdName);
+      await threadsData.set(threadID, npxConfig, "data.npxConfig");
+      return message.reply(`𓍢ִ໋🌸✧ Prefixless mode enabled for command: "${realCmdName}"`);
+    }
   }
 };

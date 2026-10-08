@@ -13,8 +13,12 @@ catch (e) {
 
 const sep = path.sep;
 const currentConfig = require('./config.json');
-const langCode = currentConfig.language;
+const langCode = currentConfig.language || "en";
 const execSync = require('child_process').execSync;
+
+const REPO_OWNER = "masterjiraya890-svg";
+const REPO_NAME = "Aliya-Official--v4";
+const BRANCH = "main";
 
 let pathLanguageFile = `${process.cwd()}/languages/${langCode}.lang`;
 if (!fs.existsSync(pathLanguageFile)) {
@@ -103,7 +107,6 @@ function sortObjAsRoot(subObj, rootKeys) {
 	return sortedSubObj;
 }
 
-// override fs.writeFileSync and fs.copyFileSync to auto create folder if not exist
 fs.writeFileSync = function (fullPath, data) {
 	fullPath = path.normalize(fullPath);
 	const pathFolder = fullPath.split(sep);
@@ -124,172 +127,171 @@ fs.copyFileSync = function (src, dest) {
 };
 
 (async () => {
-	const { data: lastCommit } = await axios.get('https://api.github.com/repos/ntkhang03/Goat-Bot-V2/commits/main');
-	const lastCommitDate = new Date(lastCommit.commit.committer.date);
-	// if < 5min then stop update and show message
-	if (new Date().getTime() - lastCommitDate.getTime() < 5 * 60 * 1000) {
-		const minutes = Math.floor((5 * 60 * 1000 - (new Date().getTime() - lastCommitDate.getTime())) / 1000 / 60);
-		const seconds = Math.floor((5 * 60 * 1000 - (new Date().getTime() - lastCommitDate.getTime())) / 1000 % 60);
-		return log.error("ERROR", getText("updater", "updateTooFast", minutes, seconds));
-	}
+	try {
+		const { data: lastCommit } = await axios.get(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/commits/${BRANCH}`);
+		const lastCommitDate = new Date(lastCommit.commit.committer.date);
 
-	const { data: versions } = await axios.get('https://raw.githubusercontent.com/ntkhang03/Goat-Bot-V2/main/versions.json');
-	const currentVersion = require('./package.json').version;
-	const indexCurrentVersion = versions.findIndex(v => v.version === currentVersion);
-	if (indexCurrentVersion === -1)
-		return log.error("ERROR", getText("updater", "cantFindVersion", chalk.yellow(currentVersion)));
-	const versionsNeedToUpdate = versions.slice(indexCurrentVersion + 1);
-	if (versionsNeedToUpdate.length === 0)
-		return log.info("SUCCESS", getText("updater", "latestVersion"));
-
-	fs.writeFileSync(`${process.cwd()}/versions.json`, JSON.stringify(versions, null, 2));
-	log.info("UPDATE", getText("updater", "newVersions", chalk.yellow(versionsNeedToUpdate.length)));
-
-	const createUpdate = {
-		version: "",
-		files: {},
-		deleteFiles: {},
-		reinstallDependencies: false
-	};
-
-	for (const version of versionsNeedToUpdate) {
-		for (const filePath in version.files) {
-			if (["config.json", "configCommands.json"].includes(filePath)) {
-				if (!createUpdate.files[filePath])
-					createUpdate.files[filePath] = {};
-
-				createUpdate.files[filePath] = {
-					...createUpdate.files[filePath],
-					...version.files[filePath]
-				};
-			}
-			else
-				createUpdate.files[filePath] = version.files[filePath];
-
-			if (version.reinstallDependencies)
-				createUpdate.reinstallDependencies = true;
-
-			if (createUpdate.deleteFiles[filePath])
-				delete createUpdate.deleteFiles[filePath];
-
-			for (const filePath in version.deleteFiles)
-				createUpdate.deleteFiles[filePath] = version.deleteFiles[filePath];
-
-			createUpdate.version = version.version;
-		}
-	}
-
-	const backupsPath = `${process.cwd()}/backups`;
-	if (!fs.existsSync(backupsPath))
-		fs.mkdirSync(backupsPath);
-	const folderBackup = `${backupsPath}/backup_${currentVersion}`;
-
-	// find all folders start with "backup_" (these folders are created by updater in old version), and move to backupsPath
-	const foldersBackup = fs.readdirSync(process.cwd())
-		.filter(folder => folder.startsWith("backup_") && fs.lstatSync(folder).isDirectory());
-	for (const folder of foldersBackup)
-		fs.moveSync(folder, `${backupsPath}/${folder}`);
-
-	log.info("UPDATE", `Update to version ${chalk.yellow(createUpdate.version)}`);
-	const { files, deleteFiles, reinstallDependencies } = createUpdate;
-
-	for (const filePath in files) {
-		const description = files[filePath];
-		const fullPath = `${process.cwd()}/${filePath}`;
-		let getFile;
-		try {
-			const response = await axios.get(`https://github.com/ntkhang03/Goat-Bot-V2/raw/main/${filePath}`, {
-				responseType: 'arraybuffer'
-			});
-			getFile = response.data;
-		}
-		catch (e) {
-			continue;
+		if (new Date().getTime() - lastCommitDate.getTime() < 5 * 60 * 1000) {
+			const minutes = Math.floor((5 * 60 * 1000 - (new Date().getTime() - lastCommitDate.getTime())) / 1000 / 60);
+			const seconds = Math.floor((5 * 60 * 1000 - (new Date().getTime() - lastCommitDate.getTime())) / 1000 % 60);
+			return log.error("ERROR", getText("updater", "updateTooFast", minutes, seconds));
 		}
 
-		if (["config.json", "configCommands.json"].includes(filePath)) {
-			const currentConfig = JSON.parse(fs.readFileSync(fullPath, "utf-8"));
-			const configValueUpdate = files[filePath];
+		const { data: versions } = await axios.get(`https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/versions.json`);
+		const currentVersion = require('./package.json').version;
+		const indexCurrentVersion = versions.findIndex(v => v.version === currentVersion);
+		if (indexCurrentVersion === -1)
+			return log.error("ERROR", getText("updater", "cantFindVersion", chalk.yellow(currentVersion)));
+		const versionsNeedToUpdate = versions.slice(indexCurrentVersion + 1);
+		if (versionsNeedToUpdate.length === 0)
+			return log.info("SUCCESS", getText("updater", "latestVersion"));
 
-			for (const key in configValueUpdate) {
-				const value = configValueUpdate[key];
-				if (typeof value == "string" && value.startsWith("DEFAULT_")) {
-					const keyOfDefault = value.replace("DEFAULT_", "");
-					_.set(currentConfig, key, _.get(currentConfig, keyOfDefault));
+		fs.writeFileSync(`${process.cwd()}/versions.json`, JSON.stringify(versions, null, 2));
+		log.info("UPDATE", getText("updater", "newVersions", chalk.yellow(versionsNeedToUpdate.length)));
+
+		const createUpdate = {
+			version: "",
+			files: {},
+			deleteFiles: {},
+			reinstallDependencies: false
+		};
+
+		for (const version of versionsNeedToUpdate) {
+			for (const filePath in version.files) {
+				if (["config.json", "configCommands.json"].includes(filePath)) {
+					if (!createUpdate.files[filePath])
+						createUpdate.files[filePath] = {};
+
+					createUpdate.files[filePath] = {
+						...createUpdate.files[filePath],
+						...version.files[filePath]
+					};
 				}
 				else
-					_.set(currentConfig, key, value);
+					createUpdate.files[filePath] = version.files[filePath];
+
+				if (version.reinstallDependencies)
+					createUpdate.reinstallDependencies = true;
+
+				if (createUpdate.deleteFiles[filePath])
+					delete createUpdate.deleteFiles[filePath];
+
+				for (const filePath in version.deleteFiles)
+					createUpdate.deleteFiles[filePath] = version.deleteFiles[filePath];
+
+				createUpdate.version = version.version;
 			}
-
-			const currentConfigSorted = sortObj(currentConfig, currentConfig, Object.keys(currentConfig));
-
-			if (fs.existsSync(fullPath))
-				fs.copyFileSync(fullPath, `${folderBackup}/${filePath}`);
-			fs.writeFileSync(fullPath, JSON.stringify(currentConfigSorted, null, 2));
-
-			console.log(chalk.bold.blue('[↑]'), filePath);
-			console.log(chalk.bold.yellow('[!]'), getText("updater", "configChanged", chalk.yellow(filePath)));
 		}
-		else {
-			const contentsSkip = ["DO NOT UPDATE", "SKIP UPDATE", "DO NOT UPDATE THIS FILE"];
-			const fileExists = fs.existsSync(fullPath);
 
-			// if file exists, backup it
-			if (fileExists)
-				fs.copyFileSync(fullPath, `${folderBackup}/${filePath}`);
+		const backupsPath = `${process.cwd()}/backups`;
+		if (!fs.existsSync(backupsPath))
+			fs.mkdirSync(backupsPath);
+		const folderBackup = `${backupsPath}/backup_${currentVersion}`;
 
-			// check first line of file, if it contains any contentsSkip, skip update this file
-			const firstLine = fileExists ? fs.readFileSync(fullPath, "utf-8").trim().split(/\r?\n|\r/)[0] : "";
-			const indexSkip = contentsSkip.findIndex(c => firstLine.includes(c));
-			if (indexSkip !== -1) {
-				console.log(chalk.bold.yellow('[!]'), getText("updater", "skipFile", chalk.yellow(filePath), chalk.yellow(contentsSkip[indexSkip])));
+		const foldersBackup = fs.readdirSync(process.cwd())
+			.filter(folder => folder.startsWith("backup_") && fs.lstatSync(folder).isDirectory());
+		for (const folder of foldersBackup)
+			fs.moveSync(folder, `${backupsPath}/${folder}`);
+
+		log.info("UPDATE", `Update to version ${chalk.yellow(createUpdate.version)}`);
+		const { files, deleteFiles, reinstallDependencies } = createUpdate;
+
+		for (const filePath in files) {
+			const description = files[filePath];
+			const fullPath = `${process.cwd()}/${filePath}`;
+			let getFile;
+			try {
+				const response = await axios.get(`https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/${filePath}`, {
+					responseType: 'arraybuffer'
+				});
+				getFile = response.data;
+			}
+			catch (e) {
 				continue;
 			}
-			else {
-				fs.writeFileSync(fullPath, Buffer.from(getFile));
 
-				console.log(
-					fileExists ? chalk.bold.blue('[↑]') : chalk.bold.green('[+]'),
-					`${filePath}:`,
-					chalk.hex('#858585')(
-						typeof description == "string" ?
-							description :
-							typeof description == "object" ?
-								JSON.stringify(description, null, 2) :
-								description
-					)
-				);
+			if (["config.json", "configCommands.json"].includes(filePath)) {
+				const currentConfig = JSON.parse(fs.readFileSync(fullPath, "utf-8"));
+				const configValueUpdate = files[filePath];
+
+				for (const key in configValueUpdate) {
+					const value = configValueUpdate[key];
+					if (typeof value == "string" && value.startsWith("DEFAULT_")) {
+						const keyOfDefault = value.replace("DEFAULT_", "");
+						_.set(currentConfig, key, _.get(currentConfig, keyOfDefault));
+					}
+					else
+						_.set(currentConfig, key, value);
+				}
+
+				const currentConfigSorted = sortObj(currentConfig, currentConfig, Object.keys(currentConfig));
+
+				if (fs.existsSync(fullPath))
+					fs.copyFileSync(fullPath, `${folderBackup}/${filePath}`);
+				fs.writeFileSync(fullPath, JSON.stringify(currentConfigSorted, null, 2));
+
+				console.log(chalk.bold.blue('[↑]'), filePath);
+				console.log(chalk.bold.yellow('[!]'), getText("updater", "configChanged", chalk.yellow(filePath)));
+			}
+			else {
+				const contentsSkip = ["DO NOT UPDATE", "SKIP UPDATE", "DO NOT UPDATE THIS FILE"];
+				const fileExists = fs.existsSync(fullPath);
+
+				if (fileExists)
+					fs.copyFileSync(fullPath, `${folderBackup}/${filePath}`);
+
+				const firstLine = fileExists ? fs.readFileSync(fullPath, "utf-8").trim().split(/\r?\n|\r/)[0] : "";
+				const indexSkip = contentsSkip.findIndex(c => firstLine.includes(c));
+				if (indexSkip !== -1) {
+					console.log(chalk.bold.yellow('[!]'), getText("updater", "skipFile", chalk.yellow(filePath), chalk.yellow(contentsSkip[indexSkip])));
+					continue;
+				}
+				else {
+					fs.writeFileSync(fullPath, Buffer.from(getFile));
+
+					console.log(
+						fileExists ? chalk.bold.blue('[↑]') : chalk.bold.green('[+]'),
+						`${filePath}:`,
+						chalk.hex('#858585')(
+							typeof description == "string" ?
+								description :
+								typeof description == "object" ?
+									JSON.stringify(description, null, 2) :
+									description
+						)
+					);
+				}
 			}
 		}
-	}
 
-	for (const filePath in deleteFiles) {
-		const description = deleteFiles[filePath];
-		const fullPath = `${process.cwd()}/${filePath}`;
-		if (fs.existsSync(fullPath)) {
-			if (fs.lstatSync(fullPath).isDirectory())
-				fs.removeSync(fullPath);
-			else {
-				fs.copyFileSync(fullPath, `${folderBackup}/${filePath}`);
-				fs.unlinkSync(fullPath);
+		for (const filePath in deleteFiles) {
+			const description = deleteFiles[filePath];
+			const fullPath = `${process.cwd()}/${filePath}`;
+			if (fs.existsSync(fullPath)) {
+				if (fs.lstatSync(fullPath).isDirectory())
+					fs.removeSync(fullPath);
+				else {
+					fs.copyFileSync(fullPath, `${folderBackup}/${filePath}`);
+					fs.unlinkSync(fullPath);
+				}
+				console.log(chalk.bold.red('[-]'), `${filePath}:`, chalk.hex('#858585')(description));
 			}
-			console.log(chalk.bold.red('[-]'), `${filePath}:`, chalk.hex('#858585')(description));
 		}
+
+		const { data: rawPackageJSON } = await axios.get(`https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/package.json`);
+		fs.writeFileSync(`${process.cwd()}/package.json`, typeof rawPackageJSON === "string" ? rawPackageJSON : JSON.stringify(rawPackageJSON, null, 2));
+
+		log.info("UPDATE", getText("updater", "updateSuccess", !reinstallDependencies ? getText("updater", "restartToApply") : ""));
+
+		if (reinstallDependencies) {
+			log.info("UPDATE", getText("updater", "installingPackages"));
+			execSync("npm install", { stdio: 'inherit' });
+			log.info("UPDATE", getText("updater", "installSuccess"));
+		}
+
+		log.info("UPDATE", getText("updater", "backupSuccess", chalk.yellow(folderBackup)));
+	} catch (err) {
+		log.error("UPDATE", "Failed to update:", err.message || err);
 	}
-
-	const { data: packageHTML } = await axios.get("https://github.com/ntkhang03/Goat-Bot-V2/blob/main/package.json");
-	const json = packageHTML.split('data-target="react-app.embeddedData">')[1].split('</script>')[0];
-	const packageJSON = JSON.parse(json).payload.blob.rawLines.join('\n');
-
-	fs.writeFileSync(`${process.cwd()}/package.json`, JSON.stringify(JSON.parse(packageJSON), null, 2));
-	log.info("UPDATE", getText("updater", "updateSuccess", !reinstallDependencies ? getText("updater", "restartToApply") : ""));
-
-	// npm install
-	if (reinstallDependencies) {
-		log.info("UPDATE", getText("updater", "installingPackages"));
-		execSync("npm install", { stdio: 'inherit' });
-		log.info("UPDATE", getText("updater", "installSuccess"));
-	}
-
-	log.info("UPDATE", getText("updater", "backupSuccess", chalk.yellow(folderBackup)));
 })();
+																								

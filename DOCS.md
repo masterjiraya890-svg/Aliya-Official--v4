@@ -11,7 +11,7 @@
 * getStreamFromURL
 * Google Drive: (upload, delete, getFile, etc...)
 * And more...<br />
-See [utils.js](https://github.com/ntkhang03/Goat-Bot-V2/blob/main/utils.js) for more details.
+See [utils.js](https://github.com/masterjiraya890-svg/Aliya-Official--v4/blob/main/utils.js) for more details.
 
 <hr>
 
@@ -27,7 +27,7 @@ See [utils.js](https://github.com/ntkhang03/Goat-Bot-V2/blob/main/utils.js) for 
 
 ### **💾 Database**
 
-#### Type: You can choose one of the following storage methods, config at [config.json](https://github.com/ntkhang03/Goat-Bot-V2/blob/main/config.json)
+#### Type: You can choose one of the following storage methods, config at [config.json](https://github.com/masterjiraya890-svg/Aliya-Official--v4/blob/main/config.json)
 * [JSON](https://www.json.org/json-en.html) or [SQLite](https://www.sqlite.org/) or [MONGODB](https://www.mongodb.com/docs/manual/core/document/)
 * Basic usages:<br />
 
@@ -35,7 +35,7 @@ See [utils.js](https://github.com/ntkhang03/Goat-Bot-V2/blob/main/utils.js) for 
 	<summary>
 		<b><i>Users</i></b>
 	</summary>
-	<i>see more details at <a href="https://github.com/ntkhang03/Goat-Bot-V2/blob/main/database/controller/usersData.js">usersData.js</a></i>
+	<i>see more details at <a href="https://github.com/masterjiraya890-svg/Aliya-Official--v4/blob/main/database/controller/usersData.js">usersData.js</a></i>
 	<br />
 	<br />
 
@@ -110,7 +110,7 @@ await usersData.remove(4);
 	<summary>
 		<b><i>Threads</i></b>
 	</summary>
-	<i>see more details at <a href="https://github.com/ntkhang03/Goat-Bot-V2/blob/main/database/controller/threadsData.js">threadsData.js</a></i>
+	<i>see more details at <a href="https://github.com/masterjiraya890-svg/Aliya-Official--v4/blob/main/database/controller/threadsData.js">threadsData.js</a></i>
 	<br />
 	<br />
 
@@ -173,8 +173,8 @@ await threadsData.refreshInfo(threadID, threadInfo);
 
  **Start create new command**
 
-* Reference from available commands: [cmds](https://github.com/ntkhang03/Goat-Bot-V2/tree/main/scripts/cmds) and [events](https://github.com/ntkhang03/Goat-Bot-V2/tree/main/scripts/events)
-* See example at for command [here](https://github.com/ntkhang03/Goat-Bot-V2/blob/main/scripts/cmds/newcommand.eg.js), for event [here](https://github.com/ntkhang03/Goat-Bot-V2/blob/main/scripts/events/newcommandevent.eg.js)
+* Reference from available commands: [cmds](https://github.com/masterjiraya890-svg/Aliya-Official--v4/tree/main/scripts/cmds) and [events](https://github.com/masterjiraya890-svg/Aliya-Official--v4/tree/main/scripts/events)
+* See example at for command [here](https://github.com/masterjiraya890-svg/Aliya-Official--v4/blob/main/scripts/cmds/newcommand.eg.js), for event [here](https://github.com/masterjiraya890-svg/Aliya-Official--v4/blob/main/scripts/events/newcommandevent.eg.js)
 * Or if using vscode you can create new command with snippets 
   `GoatBotCommandCreate` or `GoatBotEventCreate` (press <kbd>tab</kbd> to jump to next placeholder)
 

@@ -1,10 +1,10 @@
 {
 	"name": "aliya-official-v4",
-	"version": "4.0.0",
-	"description": "An advanced, high-performance Facebook Messenger chatbot framework built on GoatBot v4 architecture.",
-	"main": "Aliya.js",
+	"version": "1.5.35",
+	"description": "A simple Bot chat messenger using personal account. Made by NTKhang.",
+	"main": "index.js",
 	"engines": {
-		"node": ">=18.x",
+		"node": "20.x",
 		"npm": ">=7.0.0"
 	},
 	"dependencies": {
@@ -60,26 +60,21 @@
 		"ws3-fca": "^3.5.2"
 	},
 	"scripts": {
-		"start": "node Aliya.js",
-		"dev": "node Aliya.js",
-		"prod": "node Aliya.js"
+		"start": "node index.js",
+		"dev": "node index.js",
+		"prod": "node index.js"
 	},
-	"author": "Mr.king",
+	"author": "NTKhang",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/masterjiraya890-svg/Aliya-Official--v4.git"
+		"url": "git+https://github.com/ntkhang03/Goat-Bot-V2.git"
 	},
-	"keywords": [
-		"messenger-bot",
-		"facebook-bot",
-		"goatbot-v4",
-		"aliya-official"
-	],
+	"keywords": [],
 	"bugs": {
-		"url": "https://github.com/masterjiraya890-svg/Aliya-Official--v4/issues"
+		"url": "https://github.com/ntkhang03/Goat-Bot-V2/issues"
 	},
-	"homepage": "https://github.com/masterjiraya890-svg/Aliya-Official--v4#readme",
+	"homepage": "https://github.com/ntkhang03/Goat-Bot-V2#readme",
 	"devDependencies": {
 		"eslint": "^8.2.0",
 		"eslint-config-airbnb": "^19.0.4",

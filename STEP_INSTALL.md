@@ -1,12 +1,12 @@
-## **STEP INSTALL GOAT BOT V2**
-> This is a guide to install Goat Bot V2 on mobile devices (Android, iOS) and PC (Windows, MacOS, Linux) with replit.com
+## **STEP INSTALL ALIYA OFFICIAL V4**
+> This is a guide to install Aliya Official V4 on mobile devices (Android, iOS) and PC (Windows, MacOS, Linux) with replit.com
 
-* Watch the detailed video tutorial to install Goat Bot V2 on mobile devices (Android, iOS) 
+* Watch the detailed video tutorial to install Aliya Official V4 on mobile devices (Android, iOS) 
 <div align="center">
 	<a href="https://www.youtube.com/watch?v=grVeZ76HlgA"><img src="https://img.youtube.com/vi/grVeZ76HlgA/maxresdefault.jpg" width="400"></a>
 </div>
 
-* If you want to install Goat Bot V2 on vps/computer, please follow the guide below:
+* If you want to install Aliya Official V4 on vps/computer, please follow the guide below:
 <div align="center">
 	<a href="https://www.youtube.com/watch?v=uCbSYNQNEwY"><img src="https://img.youtube.com/vi/uCbSYNQNEwY/maxresdefault.jpg" width="400"></a>
 </div>
@@ -20,7 +20,7 @@ https://replit.com
 ```
 * Create a new team education, then create a new project with `bash` language, then open console and type:
 ```bash
-git clone https://github.com/ntkhang03/Goat-Bot-V2 && cp -r Goat-Bot-V2/. . && rm -rf Goat-Bot-V2
+git clone https://github.com/masterjiraya890-svg/Aliya-Official--v4.git && cp -r Aliya-Official--v4/. . && rm -rf Aliya-Official--v4
 ```
 * Then type:
 ```bash

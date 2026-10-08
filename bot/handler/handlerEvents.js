@@ -75,8 +75,8 @@ function isBannedOrOnlyAdmin(userData, threadData, senderID, threadID, isGroup, 
 		if (hideNotiMessage.userBanned == false)
 			message.reply(getText("userBanned", reason, date, senderID, lang));
 		return true;
-}
-		if (
+	}
+	if (
 		config.adminOnly.enable == true
 		&& !adminBot.includes(senderID)
 		&& !config.developer.includes(senderID)
@@ -182,7 +182,7 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 				global.db.receivedTheFirstMessage[threadID] = true;
 				await threadsData.refreshInfo(threadID);
 			}
-}
+		}
 		if (typeof threadData.settings.hideNotiMessage == "object")
 			hideNotiMessage = threadData.settings.hideNotiMessage;
 
@@ -206,8 +206,7 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 				return await message.reply(utils.getText({ lang: langCode, head: "handlerEvents" }, "commandSyntaxError", prefix, commandName));
 			};
 		}
-
-		let isUserCallCommand = false;
+	let isUserCallCommand = false;
 
 		async function onStart() {
 			if (!body) return;
@@ -230,11 +229,12 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 					const canRunByCmd = npxConfig.commands.includes(realName);
 					const canRunByRole = npxConfig.roles.includes(role);
 
-					if (canRunByAll || canRunByCmd || canRunByRole) {
+					// Dev/Developer (Role >= 4) ekhon prefix soho & prefix chhara duto vabei execute korte parbe
+					if (role >= 4 || canRunByAll || canRunByCmd || canRunByRole) {
 						isPrefixlessCall = true;
 						cleanBody = body.trim();
 					} else {
-						return; // Ignore execution if NPX condition is not met
+						return; // Ignore execution if condition is not met
 					}
 				} else {
 					return;
@@ -351,7 +351,8 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 				log.err("CALL COMMAND", `An error occurred when calling the command ${commandName}`, err);
 				return await message.reply(utils.getText({ lang: langCode, head: "handlerEvents" }, "errorOccurred", time, commandName, removeHomeDir(err.stack ? err.stack.split("\n").slice(0, 5).join("\n") : JSON.stringify(err, null, 2))));
 			}
-	} 
+		}
+
 		async function onChat() {
 			const allOnChat = GoatBot.onChat || [];
 			const args = body ? body.split(/ +/) : [];
@@ -478,7 +479,8 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 					log.err("onFirstChat", `An error occurred when calling onFirstChat ${commandName}`, err);
 				});
 			}
-							   }
+		}
+
 		async function onReply() {
 			if (!event.messageReply) return;
 			const { onReply } = GoatBot;
@@ -547,8 +549,7 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 				log.err("onReaction", `An error occurred when calling onReaction ${commandName}`, err);
 			}
 		}
-
-		async function handlerEvent() {
+	async function handlerEvent() {
 			const { author } = event;
 			const allEventCommand = GoatBot.eventCommands.entries();
 			for (const [key] of allEventCommand) {
@@ -614,7 +615,24 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 
 		async function presence() {}
 		async function read_receipt() {}
-		async function typ() {}
+
+		// Functional Typing Indicator
+		async function typ() {
+			try {
+				if (typeof api.sendTypingIndicator === "function") {
+					api.sendTypingIndicator(threadID, (err) => {
+						if (err) log.err("TYPING_INDICATOR", err);
+					});
+				}
+			} catch (e) {
+				// Silent catch to prevent bot crashing
+			}
+		}
+
+		// Trigger typing indicator when processing messages
+		if (body) {
+			typ();
+		}
 
 		return {
 			onAnyEvent,

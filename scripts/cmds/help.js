@@ -11,6 +11,8 @@ function roleText(role) {
   if (role === 0) return "Aʟʟ Usᴇʀs";
   if (role === 1) return "Gʀᴏᴜᴘ Aᴅᴍɪɴs";
   if (role === 2) return "Bᴏᴛ Aᴅᴍɪɴ";
+  if (role === 3) return "Bᴏᴛ Oᴡɴᴇʀ";
+  if (role === 4) return "Bᴏᴛ Dᴇᴠ";
   return "Uɴᴋɴᴏᴡɴ";
 }
 
@@ -83,12 +85,12 @@ function sendAutoDeleteMessage(api, message, content) {
 module.exports = {
   config: {
     name: "help",
-    aliases: ["menu"],
-    version: "4.1.0",
+    aliases: ["menu", "cmds"],
+    version: "4.0.0",
     author: "Mr.King",
     role: 0,
     category: "info",
-    shortDescription: "Show all commands with random anime video in Pookie Style",
+    shortDescription: "Show available commands in Aliya Official v4",
     guide: "{pn} | {pn} <page_number> | {pn} <command>"
   },
 
@@ -96,11 +98,17 @@ module.exports = {
     const prefix = getPrefix(event.threadID);
     const input = args.join(" ").trim();
 
+    // Dynamically fetch and filter commands based on user role
     const categories = {};
     let totalCmds = 0;
 
     for (const [name, cmd] of commands) {
-      if (!cmd?.config || cmd.config.role > role) continue;
+      if (!cmd?.config) continue;
+      
+      // Strict role check: User can only see commands they have permission for
+      const cmdRole = cmd.config.role ?? 0;
+      if (cmdRole > role) continue;
+
       const cat = (cmd.config.category || "UNCATEGORIZED").toUpperCase();
       if (!categories[cat]) categories[cat] = [];
       categories[cat].push(name);
@@ -111,11 +119,18 @@ module.exports = {
     const itemsPerPage = 6;
     const totalPages = Math.ceil(catNames.length / itemsPerPage) || 1;
 
+    // Command specific info view
     if (input && isNaN(input)) {
       const cmd = findCommand(input);
       if (!cmd) return sendAutoDeleteMessage(api, message, `𓍢ִ໋🌸✧ ── Cᴏᴍᴍᴀɴᴅ "${input}" ɴᴏᴛ ғᴏᴜɴᴅ! ── ✧🌸𓍢ִ໋`);
 
       const c = cmd.config;
+      const cmdRole = c.role ?? 0;
+
+      if (cmdRole > role) {
+        return sendAutoDeleteMessage(api, message, `⚠️ ʏᴏᴜ ᴅᴏ ɴᴏᴛ ʜᴀᴠᴇ ᴘᴇʀᴍɪssɪᴏɴ ᴛᴏ ᴠɪᴇᴡ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.`);
+      }
+
       const aliasText = Array.isArray(c.aliases) ? c.aliases.join(", ") : c.aliases || "Nᴏɴᴇ";
       
       let usage = c.guide?.en || c.guide || "Nᴏ ᴜsᴀɢᴇ ᴘʀᴏᴠɪᴅᴇᴅ";
@@ -130,8 +145,8 @@ module.exports = {
 ᥫ᭡ Cᴀᴛᴇɢᴏʀʏ : ${(c.category || "UNCATEGORIZED").toUpperCase()}
 ᥫ᭡ Dᴇsᴄʀɪᴘᴛɪᴏɴ : ${c.shortDescription || "N/A"}
 ᥫ᭡ Aʟɪᴀsᴇs : ${aliasText}
-ᥫ᭡ Vᴇʀsɪᴏɴ : ${c.version || "1.0"}
-ᥫ᭡ Pᴇʀᴍɪssɪᴏɴ : ${roleText(c.role)}
+ᥫ᭡ Vᴇʀsɪᴏɴ : ${c.version || "4.0.0"}
+ᥫ᭡ Pᴇʀᴍɪssɪᴏɴ : ${roleText(cmdRole)}
 ᥫ᭡ Cᴏᴏʟᴅᴏᴡɴ : ${c.countDown || 5}s
 ᥫ᭡ Aᴜᴛʜᴏʀ : ${c.author || "Uɴᴋɴᴏᴡɴ"}
 ᥫ᭡ Usᴀɢᴇ : ${usage}
@@ -146,7 +161,7 @@ module.exports = {
 
     const pageCats = catNames.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
-    let helpText = `𓍢ִ໋🌸✧ ── ͟͟͞͞Cᴏᴍᴍᴀɴᴅ Mᴇɴᴜ ── ✧🌸𓍢ִ໋🌷͙֒ ᥫ᭡—͞  \n\n`;
+    let helpText = `𓍢ִ໋🌸✧ ── ͟͟͞͞Aliya v4 Menu ── ✧🌸𓍢ִ໋🌷͙֒ ᥫ᭡—͞  \n\n`;
     helpText += `🌸 Pᴀɢᴇ : ${page}/${totalPages} ✧ Tᴏᴛᴀʟ : ${totalCmds} Cᴍᴅs\n`;
     helpText += `🌸 Pʀᴇғɪx : ${prefix}\n\n`;
 
@@ -180,7 +195,8 @@ module.exports = {
           commandName: "help",
           messageID: info.messageID,
           author: event.senderID,
-          totalPages: totalPages
+          totalPages: totalPages,
+          userRole: role
         });
 
         setTimeout(() => {
@@ -192,18 +208,23 @@ module.exports = {
     });
   },
 
-  onReply: async function ({ api, message, event, Reply }) {
+  onReply: async function ({ api, message, event, Reply, role }) {
     if (event.senderID !== Reply.author) return;
 
     const page = parseInt(event.body.trim());
     if (isNaN(page) || page < 1 || page > Reply.totalPages) return;
 
     const prefix = getPrefix(event.threadID);
+    const userRole = Reply.userRole ?? role;
+
     const categories = {};
     let totalCmds = 0;
 
     for (const [name, cmd] of commands) {
       if (!cmd?.config) continue;
+      const cmdRole = cmd.config.role ?? 0;
+      if (cmdRole > userRole) continue;
+
       const cat = (cmd.config.category || "UNCATEGORIZED").toUpperCase();
       if (!categories[cat]) categories[cat] = [];
       categories[cat].push(name);
@@ -214,7 +235,7 @@ module.exports = {
     const itemsPerPage = 6;
     const pageCats = catNames.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
-    let helpText = `𓍢ִ໋🌸✧ ── ͟͟͞͞Cᴏᴍᴍᴀɴᴅ Mᴇɴᴜ ── ✧🌸𓍢ִ໋🌷͙֒ ᥫ᭡—͞  \n\n`;
+    let helpText = `𓍢ִ໋🌸✧ ── ͟͟͞͞Aliya v4 Menu ── ✧🌸𓍢ִ໋🌷͙֒ ᥫ᭡—͞  \n\n`;
     helpText += `🌸 Pᴀɢᴇ : ${page}/${Reply.totalPages} ✧ Tᴏᴛᴀʟ : ${totalCmds} Cᴍᴅs\n`;
     helpText += `🌸 Pʀᴇғɪx : ${prefix}\n\n`;
 
@@ -250,7 +271,8 @@ module.exports = {
           commandName: "help",
           messageID: info.messageID,
           author: event.senderID,
-          totalPages: Reply.totalPages
+          totalPages: Reply.totalPages,
+          userRole: userRole
         });
 
         setTimeout(() => {
@@ -260,3 +282,4 @@ module.exports = {
     });
   }
 };
+                       

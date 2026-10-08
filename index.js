@@ -1,17 +1,17 @@
 /**
- * @author NTKhang
- * Official source: https://github.com/ntkhang03/Goat-Bot-V2
+ * @author Mr.king
+ * Official source: Aliya Official v4
  */
 
 const { spawn } = require("child_process");
 const log = require("./logger/log.js");
 
 function startProject() {
-    const child = spawn("node", ["Sakura.js"], {
+    const child = spawn("node", ["Aliya.js"], {
         cwd: __dirname,
         stdio: "inherit",
         shell: true,
-        env: { ...process.env, PORT: process.env.PORT || 1000 } // Port 1000 default
+        env: { ...process.env, PORT: process.env.PORT || 1000 }
     });
 
     child.on("close", (code) => {
@@ -22,7 +22,7 @@ function startProject() {
     });
 
     child.on("error", (err) => {
-        log.err("INDEX", "Failed to start Sakura.js", err);
+        log.err("INDEX", "Failed to start Aliya.js", err);
     });
 }
 

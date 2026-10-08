@@ -1,7 +1,7 @@
 {
 	"name": "aliya-official-v4",
-	"version": "4.0.0",
-	"description": "A simple Bot chat messenger using personal account. Made by NTKhang.",
+	"version": "4.0.1",
+	"description": "Aliya Official V4 Messenger bot, maintained by Mr.king.",
 	"main": "index.js",
 	"engines": {
 		"node": "20.x",
@@ -64,17 +64,17 @@
 		"dev": "node index.js",
 		"prod": "node index.js"
 	},
-	"author": "NTKhang",
+	"author": "Mr.king",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/ntkhang03/Goat-Bot-V2.git"
+		"url": "git+https://github.com/masterjiraya890-svg/Aliya-Official--v4.git"
 	},
 	"keywords": [],
 	"bugs": {
-		"url": "https://github.com/ntkhang03/Goat-Bot-V2/issues"
+		"url": "https://github.com/masterjiraya890-svg/Aliya-Official--v4/issues"
 	},
-	"homepage": "https://github.com/ntkhang03/Goat-Bot-V2#readme",
+	"homepage": "https://github.com/masterjiraya890-svg/Aliya-Official--v4#readme",
 	"devDependencies": {
 		"eslint": "^8.2.0",
 		"eslint-config-airbnb": "^19.0.4",

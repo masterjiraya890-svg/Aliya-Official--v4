@@ -33,7 +33,7 @@ module.exports = {
 
       const [emoji1, emoji2] = args;
 
-      const GITHUB_RAW = "https://raw.githubusercontent.com/Saim-x69x/sakura/main/ApiUrl.json";
+      const GITHUB_RAW = "https://raw.githubusercontent.com/masterjiraya890-svg/Aliya-Official--v4/main/ApiUrl.json";
       const rawRes = await axios.get(GITHUB_RAW);
       const apiBase = rawRes.data.apiv1
       const apiUrl = `${apiBase}/api/emojimix?emoji1=${encodeURIComponent(

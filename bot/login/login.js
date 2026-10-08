@@ -1,5 +1,5 @@
 // set bash title
-process.stdout.write("\x1b]2;Goat Bot V2 - Made by NTKhang, Updated by Saimx69x\x1b\x5c");
+process.stdout.write("\x1b]2;Aliya Official V4 - Maintained by Mr.king\x1b\x5c");
 const defaultRequire = require;
 
 function decode(text) {
@@ -77,10 +77,10 @@ const titles = [
 		"█▄█ █▄█ █▀█ ░█░  █▄█ █▄█ ░█░  ▀▄▀ █▄"
 	],
 	[
-		"G O A T B O T  V 2 @" + currentVersion
+		"A L I Y A  V 4 @" + currentVersion
 	],
 	[
-		"GOATBOT V2"
+		"ALIYA V4"
 	]
 ];
 const maxWidth = process.stdout.columns;
@@ -98,7 +98,7 @@ for (const text of title) {
 	const textColor = gradient("#FA8BFF", "#2BD2FF", "#2BFF88")(text);
 	centerText(textColor, text.length);
 }
-let subTitle = `Sx69x GoatBot V2@${currentVersion}- A simple Bot chat messenger use personal account`;
+let subTitle = `Aliya Official V4@${currentVersion}- A simple Bot chat messenger use personal account`;
 const subTitleArray = [];
 if (subTitle.length > maxWidth) {
 	while (subTitle.length > maxWidth) {
@@ -112,8 +112,8 @@ if (subTitle.length > maxWidth) {
 else {
 	subTitleArray.push(subTitle);
 }
-const author = ("Created by NTKhang with ♡");
-const srcUrl = ("Source code: https://github.com/ntkhang03/Goat-Bot-V2");
+const author = ("Maintained by Mr.king");
+const srcUrl = ("Source code: https://github.com/masterjiraya890-svg/Aliya-Official--v4");
 const fakeRelease = ("ALL VERSIONS NOT RELEASED HERE ARE FAKE");
 for (const t of subTitleArray) {
 	const textColor2 = gradient("#9F98E8", "#AFF6CF")(t);

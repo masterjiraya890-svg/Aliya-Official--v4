@@ -1,52 +1,45 @@
 /**
  * @author Mr.king
- * ! Modified and Updated for Aliya Bot v4
+ * ! Modified and Updated for Aliya Bot v4 Engine
  */
 
-process.on('unhandledRejection', error => console.log(error));
-process.on('uncaughtException', error => console.log(error));
+"use strict";
 
-const axios = require("axios");
+process.on('unhandledRejection', error => console.error("[UNHANDLED_REJECTION]", error));
+process.on('uncaughtException', error => console.error("[UNCAUGHT_EXCEPTION]", error));
+
 const fs = require("fs-extra");
 const google = require("googleapis").google;
 const nodemailer = require("nodemailer");
-const { execSync } = require('child_process');
 const log = require('./logger/log.js');
 const path = require("path");
 
 process.env.BLUEBIRD_W_FORGOTTEN_RETURN = 0;
 
+// Dynamic Path Loader
 function getConfigPath(baseName, ext = ".json") {
-	try {
-		const devPath = path.join(__dirname, `${baseName}.dev${ext}`);
-		const normalPath = path.join(__dirname, `${baseName}${ext}`);
-		if (fs.existsSync(devPath)) {
-			console.log(`⚙️ Loaded ${baseName}.dev${ext}`);
-			return devPath;
-		} else if (fs.existsSync(normalPath)) {
-			console.log(`⚙️ Loaded ${baseName}${ext}`);
-			return normalPath;
-		} else {
-			throw new Error(`❌ Missing ${baseName}${ext} or ${baseName}.dev${ext}`);
-		}
-	} catch (err) {
-		throw new Error(err.message);
+	const devPath = path.join(__dirname, `${baseName}.dev${ext}`);
+	const normalPath = path.join(__dirname, `${baseName}${ext}`);
+	if (fs.existsSync(devPath)) {
+		console.log(`⚙️ Loaded ${baseName}.dev${ext}`);
+		return devPath;
+	} else if (fs.existsSync(normalPath)) {
+		console.log(`⚙️ Loaded ${baseName}${ext}`);
+		return normalPath;
+	} else {
+		throw new Error(`❌ Missing ${baseName}${ext} or ${baseName}.dev${ext}`);
 	}
 }
 
+// Fast Built-in JSON Validator
 function validJSON(pathDir) {
+	if (!fs.existsSync(pathDir)) throw new Error(`File "${pathDir}" not found`);
 	try {
-		if (!fs.existsSync(pathDir))
-			throw new Error(`File "${pathDir}" not found`);
-		execSync(`npx jsonlint "${pathDir}"`, { stdio: 'pipe' });
+		const content = fs.readFileSync(pathDir, "utf-8");
+		JSON.parse(content);
 		return true;
-	}
-	catch (err) {
-		let msgError = err.message;
-		msgError = msgError.split("\n").slice(1).join("\n");
-		const indexPos = msgError.indexOf("    at");
-		msgError = msgError.slice(0, indexPos != -1 ? indexPos - 1 : msgError.length);
-		throw new Error(msgError);
+	} catch (err) {
+		throw new Error(`JSON Syntax Error in ${pathDir}: ${err.message}`);
 	}
 }
 
@@ -57,18 +50,19 @@ const dirAccount = getConfigPath("account", ".txt");
 for (const pathDir of [dirConfig, dirConfigCommands]) {
 	try {
 		validJSON(pathDir);
-	}
-	catch (err) {
-		log.error("CONFIG", `Invalid JSON file "${pathDir.replace(__dirname, "")}":\n${err.message.split("\n").map(line => `  ${line}`).join("\n")}\nPlease fix it and restart bot`);
-		process.exit(0);
+	} catch (err) {
+		log.error("CONFIG", `${err.message}\nPlease fix it and restart bot.`);
+		process.exit(1);
 	}
 }
 
 const config = require(dirConfig);
-if (config.whiteListMode?.whiteListIds && Array.isArray(config.whiteListMode.whiteListIds))
+if (config.whiteListMode?.whiteListIds && Array.isArray(config.whiteListMode.whiteListIds)) {
 	config.whiteListMode.whiteListIds = config.whiteListMode.whiteListIds.map(id => id.toString());
+}
 const configCommands = require(dirConfigCommands);
 
+// Global Bot Storage Initialization
 global.GoatBot = {
 	startTime: Date.now() - process.uptime() * 1000,
 	commands: new Map(),
@@ -129,7 +123,6 @@ global.client = {
 
 const utils = require("./utils.js");
 global.utils = utils;
-const { colors } = utils;
 
 global.temp = {
 	createThreadData: [],
@@ -146,28 +139,21 @@ global.temp = {
 	}
 };
 
+// Hot Reloading Setup
 const watchAndReloadConfig = (dir, type, prop, logName) => {
 	let lastModified = fs.statSync(dir).mtimeMs;
-	let isFirstModified = true;
 	fs.watch(dir, (eventType) => {
 		if (eventType === type) {
-			const oldConfig = global.GoatBot[prop];
 			setTimeout(() => {
 				try {
-					if (isFirstModified) {
-						isFirstModified = false;
-						return;
-					}
-					if (lastModified === fs.statSync(dir).mtimeMs) return;
+					const currentMtime = fs.statSync(dir).mtimeMs;
+					if (lastModified === currentMtime) return;
+					lastModified = currentMtime;
+
 					global.GoatBot[prop] = JSON.parse(fs.readFileSync(dir, 'utf-8'));
 					log.success(logName, `Reloaded ${dir.replace(process.cwd(), "")}`);
-				}
-				catch (err) {
+				} catch (err) {
 					log.warn(logName, `Can't reload ${dir.replace(process.cwd(), "")}`);
-					global.GoatBot[prop] = oldConfig;
-				}
-				finally {
-					lastModified = fs.statSync(dir).mtimeMs;
 				}
 			}, 200);
 		}
@@ -183,30 +169,31 @@ global.GoatBot.envEvents = global.GoatBot.configCommands.envEvents;
 
 const getText = global.utils.getText;
 
+// Auto Restart Manager
 if (config.autoRestart) {
 	const time = config.autoRestart.time;
 	if (!isNaN(time) && time > 0) {
 		utils.log.info("AUTO RESTART", getText("Goat", "autoRestart1", utils.convertTime(time, true)));
 		setTimeout(() => {
-			utils.log.info("AUTO RESTART", "Restarting...");
+			utils.log.info("AUTO RESTART", "Restarting system...");
 			process.exit(2);
 		}, time);
-	}
-	else if (typeof time == "string" && time.match(/^((((\d+,)+\d+|(\d+(\/|-|#)\d+)|\d+L?|\*(\/\d+)?|L(-\d+)?|\?|[A-Z]{3}(-[A-Z]{3})?) ?){5,7})$/gmi)) {
+	} else if (typeof time == "string" && time.match(/^((((\d+,)+\d+|(\d+(\/|-|#)\d+)|\d+L?|\*(\/\d+)?|L(-\d+)?|\?|[A-Z]{3}(-[A-Z]{3})?) ?){5,7})$/gmi)) {
 		utils.log.info("AUTO RESTART", getText("Goat", "autoRestart2", time));
 		const cron = require("node-cron");
 		cron.schedule(time, () => {
-			utils.log.info("AUTO RESTART", "Restarting...");
+			utils.log.info("AUTO RESTART", "Restarting system...");
 			process.exit(2);
 		});
 	}
 }
 
+// Async Main Bootstrapper
 (async () => {
-	// Gmail & OAuth2 Setup inside safe try...catch
+	// 1. Gmail & OAuth2 Setup
 	try {
 		const { gmailAccount } = config.credentials || {};
-		if (gmailAccount && gmailAccount.email && gmailAccount.refreshToken) {
+		if (gmailAccount?.email && gmailAccount?.refreshToken) {
 			const { email, clientId, clientSecret, refreshToken } = gmailAccount;
 			const OAuth2 = google.auth.OAuth2;
 			const OAuth2_client = new OAuth2(clientId, clientSecret);
@@ -226,30 +213,25 @@ if (config.autoRestart) {
 				}
 			});
 
-			async function sendMail({ to, subject, text, html, attachments }) {
-				const mailOptions = { from: email, to, subject, text, html, attachments };
-				const info = await transporter.sendMail(mailOptions);
-				return info;
-			}
-
-			global.utils.sendMail = sendMail;
+			global.utils.sendMail = async ({ to, subject, text, html, attachments }) => {
+				return await transporter.sendMail({ from: email, to, subject, text, html, attachments });
+			};
 			global.utils.transporter = transporter;
 		}
 	} catch (err) {
-		log.warn("GMAIL_INIT", "Gmail/Nodemailer initialization skipped or failed. Continuing bot startup...");
+		log.warn("GMAIL_INIT", "Gmail/Nodemailer bypass: " + err.message);
 	}
 
-	// Google Drive Check inside safe try...catch
+	// 2. Google Drive Setup
 	try {
 		if (utils.drive && typeof utils.drive.checkAndCreateParentFolder === "function") {
-			const parentIdGoogleDrive = await utils.drive.checkAndCreateParentFolder("AliyaBot");
-			utils.drive.parentID = parentIdGoogleDrive;
+			utils.drive.parentID = await utils.drive.checkAndCreateParentFolder("AliyaBot");
 		}
 	} catch (err) {
-		log.warn("GDRIVE_INIT", "Google Drive parent folder check skipped.");
+		log.warn("GDRIVE_INIT", "Google Drive bypass: " + err.message);
 	}
 
-	// Main Login Call
+	// 3. Trigger Core Login
 	require(`./bot/login/login.js`);
 })();
-						
+	

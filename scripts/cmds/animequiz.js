@@ -1,147 +1,132 @@
 const axios = require("axios");
 
-async function toFont(text, id = 22) {
-  try {
-    const GITHUB_RAW = "https://raw.githubusercontent.com/masterjiraya890-svg/Aliya-Official--v4/main/ApiUrl.json";
-    const rawRes = await axios.get(GITHUB_RAW);
-    const apiBase = rawRes.data.apiv1;
-
-    const apiUrl = `${apiBase}/api/font?id=${id}&text=${encodeURIComponent(text)}`;
-    const { data } = await axios.get(apiUrl);
-    return data.output || text;
-  } catch (e) {
-    console.error("Font API error:", e.message);
-    return text;
-  }
-}
+const baseApiUrl = async () => {
+        const base = await axios.get("https://raw.githubusercontent.com/mahmudx7/HINATA/main/baseApiUrl.json");
+        return base.data.mahmud;
+};
 
 module.exports = {
-  config: {
-    name: "animequiz",
-    aliases: ["animeqz", "aniquiz", "aniqz"],
-    version: "4.0.0",
-    author: "Mr.king",
-    countDown: 10,
-    role: 0,
-    category: "game",
-    guide: { en: "{pn} — Guess the anime character!" }
-  },
-
-  onStart: async function ({ api, event }) {
-    try {
-      const GITHUB_RAW = "https://raw.githubusercontent.com/masterjiraya890-svg/Aliya-Official--v4/main/ApiUrl.json";
-      const rawRes = await axios.get(GITHUB_RAW);
-      const quizApiBase = rawRes.data.apiv1;
-
-      const { data } = await axios.get(`${quizApiBase}/api/animequiz`);
-      const { image, options, answer } = data;
-
-      const imageStream = await axios({ method: "GET", url: image, responseType: "stream" });
-
-      const body = await toFont(`🎌 𝐀𝐧𝐢𝐦𝐞 𝐐𝐮𝐢𝐳 🎭
-━━━━━━━━━━━━━━
-📷 Guess the Anime Character!
-
-🅐 ${options.A}
-🅑 ${options.B}
-🅒 ${options.C}
-🅓 ${options.D}
-
-⏳ You have 1 minute 30 seconds!
-💡 You have 3 chances! Reply with A, B, C or D.`);
-
-      api.sendMessage(
-        { body, attachment: imageStream.data },
-        event.threadID,
-        async (err, info) => {
-          if (err) return console.error(err);
-
-          global.GoatBot.onReply.set(info.messageID, {
-            commandName: this.config.name,
-            type: "reply",
-            messageID: info.messageID,
-            author: event.senderID,
-            correctAnswer: answer,
-            chances: 3,
-            answered: false
-          });
-
-          setTimeout(async () => {
-            const quizData = global.GoatBot.onReply.get(info.messageID);
-            if (quizData && !quizData.answered) {
-              try {
-                await api.unsendMessage(info.messageID);
-              } catch {}
-              global.GoatBot.onReply.delete(info.messageID);
-            }
-          }, 90000);
+        config: {
+                name: "animequiz",
+                aliases: ["aniqz"],
+                version: "1.7",
+                author: "MahMUD",
+                countDown: 10,
+                role: 0,
+                description: {
+                        bn: "অ্যানিমে চরিত্রের ছবি দেখে নাম অনুমান করার খেলা",
+                        en: "Guess the anime character name by looking at the picture",
+                        vi: "Đoán tên nhân vật anime bằng cách nhìn vào bức ảnh"
+                },
+                category: "game",
+                guide: {
+                        bn: '   {pn}: গেমটি শুরু করতে লিখুন',
+                        en: '   {pn}: Type to start the game',
+                        vi: '   {pn}: Nhập để bắt đầu trò chơi'
+                }
         },
-        event.messageID
-      );
-    } catch (err) {
-      console.error(err);
-      const failMsg = await toFont("❌ Failed to fetch Anime Quiz data.");
-      api.sendMessage(failMsg, event.threadID, event.messageID);
-    }
-  },
 
-  onReply: async function ({ api, event, Reply, usersData }) {
-    let { author, correctAnswer, messageID, chances } = Reply;
-    const reply = event.body?.trim().toUpperCase();
+        langs: {
+                bn: {
+                        start: "একটি অ্যানিমে চরিত্রের ছবি এসেছে! নামটা বলো তো বেবি?",
+                        correct: "✅ | একদম সঠিক উত্তর বেবি!\n\nতুমি জিতেছো %1 কয়েন এবং %2 এক্সপি।",
+                        wrong: "🥺 | উত্তরটি ভুল হয়েছে বেবি!\n\nসঠিক উত্তর ছিল: %1",
+                        notYour: "× বেবি, এটি তোমার জন্য নয়! নিজের জন্য গেম শুরু করো। >🐸",
+                        error: "× সমস্যা হয়েছে: %1। প্রয়োজনে Contact MahMUD।"
+                },
+                en: {
+                        start: "A random anime character has appeared! Guess the name, baby.",
+                        correct: "✅ | Correct answer, baby!\n\nYou have earned %1 coins and %2 exp.",
+                        wrong: "🥺 | Wrong Answer, baby!\n\nThe Correct answer was: %1",
+                        notYour: "× This is not your game, baby! >🐸",
+                        error: "× API error: %1. Contact MahMUD for help."
+                },
+                vi: {
+                        start: "Một nhân vật anime đã xuất hiện! Đoán tên đi cưng.",
+                        correct: "✅ | Đáp án chính xác cưng ơi!\n\n✨ Bạn nhận được %1 xu và %2 exp.",
+                        wrong: "🥺 | Sai rồi cưng ơi!\n\nĐáp án đúng là: %1",
+                        notYour: "× Đây không phải phần chơi của bạn cưng à! >🐸",
+                        error: "× Lỗi: %1. Liên hệ MahMUD để được hỗ trợ."
+                }
+        },
 
-    if (event.senderID !== author) {
-      const msg = await toFont("⚠️ This is not your quiz!");
-      return api.sendMessage(msg, event.threadID, event.messageID);
-    }
+        onReply: async function ({ api, event, Reply, usersData, getLang }) {
+                const authorName = String.fromCharCode(77, 97, 104, 77, 85, 68); 
+                if (module.exports.config.author !== authorName) {
+                        return api.sendMessage("You are not authorized to change the author name.", event.threadID, event.messageID);
+                }
 
-    if (!reply || !["A", "B", "C", "D"].includes(reply)) {
-      const msg = await toFont("❌ Please reply with A, B, C or D.");
-      return api.sendMessage(msg, event.threadID, event.messageID);
-    }
+                const { aniqzNames, author } = Reply;
+                const getCoin = 1000;
+                const getExp = 121;
+                
+                if (event.senderID !== author) {
+                        return api.sendMessage(getLang("notYour"), event.threadID, event.messageID);
+                }
 
-    if (reply === correctAnswer) {
-      try {
-        await api.unsendMessage(messageID);
-      } catch {}
+                const reply = event.body.trim().toLowerCase();
+                const userData = await usersData.get(event.senderID);
+                
+                await api.unsendMessage(Reply.messageID);
 
-      const rewardCoin = 350;
-      const rewardExp = 120;
-      const userData = (await usersData.get(event.senderID)) || { money: 0, exp: 0 };
-      userData.money += rewardCoin;
-      userData.exp += rewardExp;
-      await usersData.set(event.senderID, userData);
+                const isCorrect = aniqzNames.some(name => reply.includes(name.toLowerCase()));
 
-      const correctMsg = await toFont(`🎯 Sugoi! You guessed it right!
+                if (isCorrect) {
+                        userData.money += getCoin;
+                        userData.exp += getExp;
+                        await usersData.set(event.senderID, userData);
 
-✅ Correct Answer!
-💰 +${rewardCoin} Coins
-🌟 +${rewardExp} EXP
+                        return api.sendMessage(getLang("correct", getCoin, getExp), event.threadID, event.messageID);
+                } else {
+        
+                        return api.sendMessage(getLang("wrong", aniqzNames.join(", ")), event.threadID, event.messageID);
+                }
+        },
 
-🏆 You're a true anime fan!`);
+        onStart: async function ({ api, event, getLang }) {
+                try {
+                        const authorName = String.fromCharCode(77, 97, 104, 77, 85, 68); 
+                        if (this.config.author !== authorName) return;
 
-      if (global.GoatBot.onReply.has(messageID)) {
-        global.GoatBot.onReply.get(messageID).answered = true;
-        global.GoatBot.onReply.delete(messageID);
-      }
+                        const apiUrl = await baseApiUrl();
+                        if (!apiUrl) return api.sendMessage("❌ API URL not found!", event.threadID);
 
-      return api.sendMessage(correctMsg, event.threadID, event.messageID);
-    } else {
-      chances--;
+                        const response = await axios.get(`${apiUrl}/api/aniqz`);
+                        const { name, imgurLink } = response.data.aniqz;
 
-      if (chances > 0) {
-        global.GoatBot.onReply.set(messageID, { ...Reply, chances });
-        const wrongTryMsg = await toFont(`❌ Wrong answer!
-⏳ You still have ${chances} chance(s) left. Try again!`);
-        return api.sendMessage(wrongTryMsg, event.threadID, event.messageID);
-      } else {
-        try {
-          await api.unsendMessage(messageID);
-        } catch {}
-        const wrongMsg = await toFont(`😢 Out of chances!
-✅ The correct option was: ${correctAnswer}`);
-        return api.sendMessage(wrongMsg, event.threadID, event.messageID);
-      }
-    }
-  }
+                        const aniqzNames = Array.isArray(name) ? name : [name];
+
+                        const imageStream = await axios({
+                                method: "GET",
+                                url: imgurLink,
+                                responseType: "stream",
+                                headers: { 'User-Agent': 'Mozilla/5.0' }
+                        });
+
+                        return api.sendMessage({
+                                        body: getLang("start"),
+                                        attachment: imageStream.data
+                                },
+                                event.threadID,
+                                (err, info) => {
+                                        if (err) return api.sendMessage("❌ Failed to send character image.", event.threadID);
+
+                                        global.GoatBot.onReply.set(info.messageID, {
+                                                commandName: this.config.name,
+                                                messageID: info.messageID,
+                                                author: event.senderID,
+                                                aniqzNames
+                                        });
+
+                                        setTimeout(() => {
+                                                api.unsendMessage(info.messageID);
+                                        }, 40000); 
+                                },
+                                event.messageID
+                        );
+                } catch (error) {
+                        console.error("AnimeQuiz Error:", error.message);
+                        return api.sendMessage(getLang("error", error.message), event.threadID, event.messageID);
+                }
+        }
 };
-                                               

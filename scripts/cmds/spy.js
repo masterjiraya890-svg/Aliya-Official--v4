@@ -78,7 +78,7 @@ const getImages = async profile => {
 module.exports = {
   config: {
     name: "spy",
-    aliases: ["stalk", "info", "whois"],
+    aliases: ["stalk"],
     version: "10.1.1",
     role: 0,
     author: "Rafix4x",

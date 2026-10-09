@@ -6,6 +6,26 @@ function getType(obj) {
 	return Object.prototype.toString.call(obj).slice(8, -1);
 }
 
+async function resolveSenderName(api, usersData, userData, senderID) {
+	let name = userData?.name;
+	if (name) return name;
+
+	if (!isNaN(senderID)) {
+		try {
+			name = await usersData.getName(senderID, false);
+		} catch (err) {}
+	}
+
+	if (!name && !isNaN(senderID) && typeof api?.getUserInfo === "function") {
+		try {
+			const userInfo = await api.getUserInfo(senderID);
+			name = userInfo?.[senderID]?.name;
+		} catch (err) {}
+	}
+
+	return name || "User";
+}
+
 function getRole(threadData, senderID) {
 	const config = global.GoatBot.config;
 	const adminBot = config.adminBot || [];
@@ -66,22 +86,23 @@ function getRoleConfig(utils, command, isGroup, threadData, commandName) {
 
 function isBannedOrOnlyAdmin(userData, threadData, senderID, threadID, isGroup, commandName, message, lang) {
 	const config = global.GoatBot.config;
-	const { adminBot, developer, vipuser, hideNotiMessage, developerOnly, vipOnly } = config; 
+	const { adminBot, hideNotiMessage, developerOnly, vipOnly } = config; 
     const role = getRole(threadData, senderID); 
 
-	const infoBannedUser = userData.banned;
+	const infoBannedUser = userData.banned || {};
 	if (infoBannedUser.status == true) {
 		const { reason, date } = infoBannedUser;
 		if (hideNotiMessage.userBanned == false)
 			message.reply(getText("userBanned", reason, date, senderID, lang));
 		return true;
 	}
+
 	if (
 		config.adminOnly.enable == true
 		&& !adminBot.includes(senderID)
-		&& !config.developer.includes(senderID)
-		&& !config.vipuser.includes(senderID)
-		&& !config.adminOnly.ignoreCommand.includes(commandName)
+		&& !(config.developer || []).includes(senderID)
+		&& !(config.vipuser || []).includes(senderID)
+		&& !(config.adminOnly.ignoreCommand || []).includes(commandName)
 	) {
 		if (hideNotiMessage.adminOnly == false)
 			message.reply(global.utils.getText({ lang, head: "handlerEvents" }, "onlyAdminBot", null, null, null, lang));
@@ -90,11 +111,11 @@ function isBannedOrOnlyAdmin(userData, threadData, senderID, threadID, isGroup, 
 	
 	if (
 		(developerOnly?.enable == true)
-		&& role < 2
+		&& role < 4
 		&& !(developerOnly?.ignoreCommand || []).includes(commandName)
 	) {
 		if ((hideNotiMessage.developerOnly ?? false) == false) 
-			message.reply(global.utils.getText({ lang, head: "handlerEvents" }, "onlyVipUserGlobal", null, null, null, lang)); 
+			message.reply(global.utils.getText({ lang, head: "handlerEvents" }, "onlyDeveloper", null, null, null, lang)); 
 		return true;
 	}
     
@@ -111,7 +132,7 @@ function isBannedOrOnlyAdmin(userData, threadData, senderID, threadID, isGroup, 
 	if (isGroup == true) {
 		if (
 			threadData.data.onlyAdminBox === true
-			&& !threadData.adminIDs.includes(senderID)
+			&& !(threadData.adminIDs || []).includes(senderID)
 			&& !(threadData.data.ignoreCommanToOnlyAdminBox || []).includes(commandName)
 		) {
 			if (!threadData.data.hideNotiMessageOnlyAdminBox)
@@ -119,7 +140,7 @@ function isBannedOrOnlyAdmin(userData, threadData, senderID, threadID, isGroup, 
 			return true;
 		}
 
-		const infoBannedThread = threadData.banned;
+		const infoBannedThread = threadData.banned || {};
 		if (infoBannedThread.status == true) {
 			const { reason, date } = infoBannedThread;
 			if (hideNotiMessage.threadBanned == false)
@@ -183,30 +204,31 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 				await threadsData.refreshInfo(threadID);
 			}
 		}
-		if (typeof threadData.settings.hideNotiMessage == "object")
+		if (typeof threadData.settings?.hideNotiMessage == "object")
 			hideNotiMessage = threadData.settings.hideNotiMessage;
-
-		const prefix = getPrefix(threadID);
+				const prefix = getPrefix(threadID);
 		const role = getRole(threadData, senderID);
+		const senderName = await resolveSenderName(api, usersData, userData, senderID);
+
 		const parameters = {
 			api, usersData, threadsData, message, event,
 			userModel, threadModel, prefix, dashBoardModel,
 			globalModel, dashBoardData, globalData, envCommands,
-			envEvents, envGlobal, role,
+			envEvents, envGlobal, role, senderName,
 			removeCommandNameFromBody: function removeCommandNameFromBody(body_, prefix_, commandName_) {
 				if ([body_, prefix_, commandName_].every(x => nullAndUndefined.includes(x)))
 					throw new Error("Please provide parameters");
 				return body_.replace(new RegExp(`^${prefix_}(\\s+|)${commandName_}`, "i"), "").trim();
 			}
 		};
-		const langCode = threadData.data.lang || config.language || "en";
+		const langCode = threadData.data?.lang || config.language || "en";
 
 		function createMessageSyntaxError(commandName) {
 			message.SyntaxError = async function () {
 				return await message.reply(utils.getText({ lang: langCode, head: "handlerEvents" }, "commandSyntaxError", prefix, commandName));
 			};
 		}
-	let isUserCallCommand = false;
+		let isUserCallCommand = false;
 
 		async function onStart() {
 			if (!body) return;
@@ -214,7 +236,6 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 			let isPrefixlessCall = false;
 			let cleanBody = body;
 
-			// Check NPX Prefixless Configuration
 			const npxConfig = threadData.data?.npxConfig || { all: false, commands: [], roles: [] };
 			
 			if (body.startsWith(prefix)) {
@@ -229,12 +250,11 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 					const canRunByCmd = npxConfig.commands.includes(realName);
 					const canRunByRole = npxConfig.roles.includes(role);
 
-					// Dev/Developer (Role >= 4) ekhon prefix soho & prefix chhara duto vabei execute korte parbe
 					if (role >= 4 || canRunByAll || canRunByCmd || canRunByRole) {
 						isPrefixlessCall = true;
 						cleanBody = body.trim();
 					} else {
-						return; // Ignore execution if condition is not met
+						return;
 					}
 				} else {
 					return;
@@ -246,7 +266,7 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 			let commandName = args.shift().toLowerCase();
 			let command = GoatBot.commands.get(commandName) || GoatBot.commands.get(GoatBot.aliases.get(commandName));
 
-			const aliasesData = threadData.data.aliases || {};
+			const aliasesData = threadData.data?.aliases || {};
 			for (const cmdName in aliasesData) {
 				if (aliasesData[cmdName].includes(commandName)) {
 					command = GoatBot.commands.get(cmdName);
@@ -304,9 +324,9 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 					if (needRole == 1)
 						return await message.reply(utils.getText({ lang: langCode, head: "handlerEvents" }, "onlyAdmin", commandName));
 					else if (needRole == 2)
-						return await message.reply(utils.getText({ lang: langCode, head: "handlerEvents" }, "onlyAdminBot2", commandName));
-					else if (needRole == 3)
 						return await message.reply(utils.getText({ lang: langCode, head: "handlerEvents" }, "onlyVipUser", commandName));
+					else if (needRole == 3)
+						return await message.reply(utils.getText({ lang: langCode, head: "handlerEvents" }, "onlyAdminBot", commandName));
 					else if (needRole == 4)
 						return await message.reply(utils.getText({ lang: langCode, head: "handlerEvents" }, "onlyDeveloper", commandName));
 				}
@@ -346,7 +366,7 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 					removeCommandNameFromBody
 				});
 				timestamps[senderID] = dateNow;
-				log.info("CALL COMMAND", `${commandName} | ${userData.name} | ${senderID} | ${threadID} | ${args.join(" ")}`);
+				log.info("CALL COMMAND", `${commandName} | ${senderName} | ${senderID} | ${threadID} | ${args.join(" ")}`);
 			} catch (err) {
 				log.err("CALL COMMAND", `An error occurred when calling the command ${commandName}`, err);
 				return await message.reply(utils.getText({ lang: langCode, head: "handlerEvents" }, "errorOccurred", time, commandName, removeHomeDir(err.stack ? err.stack.split("\n").slice(0, 5).join("\n") : JSON.stringify(err, null, 2))));
@@ -386,7 +406,7 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 							return;
 						try {
 							await handler();
-							log.info("onChat", `${commandName} | ${userData.name} | ${senderID} | ${threadID} | ${args.join(" ")}`);
+							log.info("onChat", `${commandName} | ${senderName} | ${senderID} | ${threadID} | ${args.join(" ")}`);
 						} catch (err) {
 							await message.reply(utils.getText({ lang: langCode, head: "handlerEvents" }, "errorOccurred2", time, commandName, removeHomeDir(err.stack ? err.stack.split("\n").slice(0, 5).join("\n") : JSON.stringify(err, null, 2))));
 						}
@@ -427,7 +447,7 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 					if (typeof handler == "function") {
 						try {
 							await handler();
-							log.info("onAnyEvent", `${commandName} | ${senderID} | ${userData.name} | ${threadID}`);
+							log.info("onAnyEvent", `${commandName} | ${senderID} | ${senderName} | ${threadID}`);
 						} catch (err) {
 							message.reply(utils.getText({ lang: langCode, head: "handlerEvents" }, "errorOccurred7", time, commandName, removeHomeDir(err.stack ? err.stack.split("\n").slice(0, 5).join("\n") : JSON.stringify(err, null, 2))));
 						}
@@ -470,7 +490,7 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 							return;
 						try {
 							await handler();
-							log.info("onFirstChat", `${commandName} | ${userData.name} | ${senderID} | ${threadID} | ${args.join(" ")}`);
+							log.info("onFirstChat", `${commandName} | ${senderName} | ${senderID} | ${threadID} | ${args.join(" ")}`);
 						} catch (err) {
 							await message.reply(utils.getText({ lang: langCode, head: "handlerEvents" }, "errorOccurred2", time, commandName, removeHomeDir(err.stack ? err.stack.split("\n").slice(0, 5).join("\n") : JSON.stringify(err, null, 2))));
 						}
@@ -510,7 +530,7 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 					commandName,
 					getLang: getText2
 				});
-				log.info("onReply", `${commandName} | ${userData.name} | ${senderID} | ${threadID} | ${args.join(" ")}`);
+				log.info("onReply", `${commandName} | ${senderName} | ${senderID} | ${threadID} | ${args.join(" ")}`);
 			} catch (err) {
 				log.err("onReply", `An error occurred when calling onReply ${commandName}`, err);
 			}
@@ -544,12 +564,12 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 					commandName,
 					getLang: getText2
 				});
-				log.info("onReaction", `${commandName} | ${userData.name} | ${senderID} | ${threadID} | ${event.reaction}`);
+				log.info("onReaction", `${commandName} | ${senderName} | ${senderID} | ${threadID} | ${event.reaction}`);
 			} catch (err) {
 				log.err("onReaction", `An error occurred when calling onReaction ${commandName}`, err);
 			}
 		}
-	async function handlerEvent() {
+		async function handlerEvent() {
 			const { author } = event;
 			const allEventCommand = GoatBot.eventCommands.entries();
 			for (const [key] of allEventCommand) {
@@ -566,7 +586,7 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 					});
 					if (typeof handler == "function") {
 						await handler();
-						log.info("EVENT COMMAND", `Event: ${commandName} | ${author} | ${userData.name} | ${threadID}`);
+						log.info("EVENT COMMAND", `Event: ${commandName} | ${author} | ${senderName} | ${threadID}`);
 					}
 				} catch (err) {
 					log.err("EVENT COMMAND", `An error occurred when calling event ${commandName}`, err);
@@ -602,7 +622,7 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 					if (typeof handler == "function") {
 						try {
 							await handler();
-							log.info("onEvent", `${commandName} | ${author} | ${userData.name} | ${threadID}`);
+							log.info("onEvent", `${commandName} | ${author} | ${senderName} | ${threadID}`);
 						} catch (err) {
 							message.reply(utils.getText({ lang: langCode, head: "handlerEvents" }, "errorOccurred6", time, commandName, removeHomeDir(err.stack ? err.stack.split("\n").slice(0, 5).join("\n") : JSON.stringify(err, null, 2))));
 						}
@@ -625,11 +645,10 @@ module.exports = function (api, threadModel, userModel, dashBoardModel, globalMo
 					});
 				}
 			} catch (e) {
-				// Silent catch to prevent bot crashing
+				// Silent catch
 			}
 		}
 
-		// Trigger typing indicator when processing messages
 		if (body) {
 			typ();
 		}

@@ -38,7 +38,6 @@ function compareVersions(left, right) {
 
 let pathLanguageFile = `${process.cwd()}/languages/${langCode}.lang`;
 if (!fs.existsSync(pathLanguageFile)) {
-	log.warn("LANGUAGE", `Can't find language file ${langCode}, using default language file "${path.normalize(`${process.cwd()}/languages/en.lang`)}"`);
 	pathLanguageFile = `${process.cwd()}/languages/en.lang`;
 }
 const readLanguage = fs.readFileSync(pathLanguageFile, "utf-8");
@@ -84,24 +83,11 @@ function checkAndAutoCreateFolder(pathFolder) {
 function sortObj(obj, parentObj, rootKeys, stringKey = "") {
 	const root = sortObjAsRoot(obj, rootKeys);
 	stringKey = stringKey || "";
-	if (stringKey) {
-		stringKey += ".";
-	}
+	if (stringKey) stringKey += ".";
 	for (const key in root) {
-		if (
-			typeof root[key] == "object"
-			&& !Array.isArray(root[key])
-			&& root[key] != null
-		) {
+		if (typeof root[key] == "object" && !Array.isArray(root[key]) && root[key] != null) {
 			stringKey += key;
-
-			root[key] = sortObj(
-				root[key],
-				parentObj,
-				Object.keys(_.get(parentObj, stringKey) || {}),
-				stringKey
-			);
-
+			root[key] = sortObj(root[key], parentObj, Object.keys(_.get(parentObj, stringKey) || {}), stringKey);
 			stringKey = "";
 		}
 	}
@@ -119,15 +105,13 @@ function sortObjAsRoot(subObj, rootKeys) {
 	for (const key of sortedSubObjKeys) {
 		sortedSubObj[key] = subObj[key];
 	}
-
 	return sortedSubObj;
 }
 
 fs.writeFileSync = function (fullPath, data) {
 	fullPath = path.normalize(fullPath);
 	const pathFolder = fullPath.split(sep);
-	if (pathFolder.length > 1)
-		pathFolder.pop();
+	if (pathFolder.length > 1) pathFolder.pop();
 	checkAndAutoCreateFolder(pathFolder.join(path.sep));
 	defaultWriteFileSync(fullPath, data);
 };
@@ -136,39 +120,30 @@ fs.copyFileSync = function (src, dest) {
 	src = path.normalize(src);
 	dest = path.normalize(dest);
 	const pathFolder = dest.split(sep);
-	if (pathFolder.length > 1)
-		pathFolder.pop();
+	if (pathFolder.length > 1) pathFolder.pop();
 	checkAndAutoCreateFolder(pathFolder.join(path.sep));
 	defaulCopyFileSync(src, dest);
 };
 
-(async () => {
+module.exports = async function runUpdater() {
 	try {
-		const { data: lastCommit } = await axios.get(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/commits/${BRANCH}`);
-		const lastCommitDate = new Date(lastCommit.commit.committer.date);
-
-		if (new Date().getTime() - lastCommitDate.getTime() < 5 * 60 * 1000) {
-			const minutes = Math.floor((5 * 60 * 1000 - (new Date().getTime() - lastCommitDate.getTime())) / 1000 / 60);
-			const seconds = Math.floor((5 * 60 * 1000 - (new Date().getTime() - lastCommitDate.getTime())) / 1000 % 60);
-			return log.error("ERROR", getText("updater", "updateTooFast", minutes, seconds));
-		}
-
 		const { data: versionManifest } = await axios.get("https://raw.githubusercontent.com/" + REPO_OWNER + "/" + REPO_NAME + "/" + BRANCH + "/versions.json");
 		const currentVersion = require('./package.json').version;
+		
 		if (!Array.isArray(versionManifest))
 			throw new Error("Invalid update history: expected a version list");
+			
 		const orderedVersions = versionManifest.slice().sort((a, b) => compareVersions(a.version, b.version));
-		for (let i = 1; i < orderedVersions.length; i++) {
-			if (compareVersions(orderedVersions[i - 1].version, orderedVersions[i].version) === 0)
-				throw new Error("Duplicate version in update history: " + orderedVersions[i].version);
-		}
+		
 		if (!orderedVersions.some(version => version.version === currentVersion))
-			return log.error("ERROR", "Current version " + chalk.yellow(currentVersion) + " is missing from update history. No update was applied.");
+			return "Current version (" + currentVersion + ") is missing from versions.json. No update applied.";
+
 		const versionsNeedToUpdate = orderedVersions.filter(version => compareVersions(version.version, currentVersion) > 0);
+		
 		if (versionsNeedToUpdate.length === 0)
-			return log.info("SUCCESS", getText("updater", "latestVersion"));
+			return "You are already using the latest version of Aliya V4!";
+
 		fs.writeFileSync(`${process.cwd()}/versions.json`, JSON.stringify(orderedVersions, null, 2));
-		log.info("UPDATE", getText("updater", "newVersions", chalk.yellow(versionsNeedToUpdate.length)));
 
 		const createUpdate = {
 			version: "",
@@ -196,20 +171,12 @@ fs.copyFileSync = function (src, dest) {
 		}
 
 		const backupsPath = `${process.cwd()}/backups`;
-		if (!fs.existsSync(backupsPath))
-			fs.mkdirSync(backupsPath);
+		if (!fs.existsSync(backupsPath)) fs.mkdirSync(backupsPath);
 		const folderBackup = `${backupsPath}/backup_${currentVersion}`;
 
-		const foldersBackup = fs.readdirSync(process.cwd())
-			.filter(folder => folder.startsWith("backup_") && fs.lstatSync(folder).isDirectory());
-		for (const folder of foldersBackup)
-			fs.moveSync(folder, `${backupsPath}/${folder}`);
-
-		log.info("UPDATE", `Update Aliya Official v4 to version ${chalk.yellow(createUpdate.version)}`);
 		const { files, deleteFiles, reinstallDependencies } = createUpdate;
 
 		for (const filePath in files) {
-			const description = files[filePath];
 			const fullPath = `${process.cwd()}/${filePath}`;
 			let getFile;
 			try {
@@ -217,8 +184,7 @@ fs.copyFileSync = function (src, dest) {
 					responseType: 'arraybuffer'
 				});
 				getFile = response.data;
-			}
-			catch (e) {
+			} catch (e) {
 				continue;
 			}
 
@@ -231,79 +197,50 @@ fs.copyFileSync = function (src, dest) {
 					if (typeof value == "string" && value.startsWith("DEFAULT_")) {
 						const keyOfDefault = value.replace("DEFAULT_", "");
 						_.set(currentConfig, key, _.get(currentConfig, keyOfDefault));
-					}
-					else
+					} else {
 						_.set(currentConfig, key, value);
+					}
 				}
 
 				const currentConfigSorted = sortObj(currentConfig, currentConfig, Object.keys(currentConfig));
 
-				if (fs.existsSync(fullPath))
-					fs.copyFileSync(fullPath, `${folderBackup}/${filePath}`);
+				if (fs.existsSync(fullPath)) fs.copyFileSync(fullPath, `${folderBackup}/${filePath}`);
 				fs.writeFileSync(fullPath, JSON.stringify(currentConfigSorted, null, 2));
-
-				console.log(chalk.bold.blue('[↑]'), filePath);
-				console.log(chalk.bold.yellow('[!]'), getText("updater", "configChanged", chalk.yellow(filePath)));
-			}
-			else {
+			} else {
 				const contentsSkip = ["DO NOT UPDATE", "SKIP UPDATE", "DO NOT UPDATE THIS FILE"];
 				const fileExists = fs.existsSync(fullPath);
 
-				if (fileExists)
-					fs.copyFileSync(fullPath, `${folderBackup}/${filePath}`);
+				if (fileExists) fs.copyFileSync(fullPath, `${folderBackup}/${filePath}`);
 
 				const firstLine = fileExists ? fs.readFileSync(fullPath, "utf-8").trim().split(/\r?\n|\r/)[0] : "";
 				const indexSkip = contentsSkip.findIndex(c => firstLine.includes(c));
-				if (indexSkip !== -1) {
-					console.log(chalk.bold.yellow('[!]'), getText("updater", "skipFile", chalk.yellow(filePath), chalk.yellow(contentsSkip[indexSkip])));
-					continue;
-				}
-				else {
-					fs.writeFileSync(fullPath, Buffer.from(getFile));
+				if (indexSkip !== -1) continue;
 
-					console.log(
-						fileExists ? chalk.bold.blue('[↑]') : chalk.bold.green('[+]'),
-						`${filePath}:`,
-						chalk.hex('#858585')(
-							typeof description == "string" ?
-								description :
-								typeof description == "object" ?
-									JSON.stringify(description, null, 2) :
-									description
-						)
-					);
-				}
+				fs.writeFileSync(fullPath, Buffer.from(getFile));
 			}
 		}
 
 		for (const filePath in deleteFiles) {
-			const description = deleteFiles[filePath];
 			const fullPath = `${process.cwd()}/${filePath}`;
 			if (fs.existsSync(fullPath)) {
-				if (fs.lstatSync(fullPath).isDirectory())
-					fs.removeSync(fullPath);
+				if (fs.lstatSync(fullPath).isDirectory()) fs.removeSync(fullPath);
 				else {
 					fs.copyFileSync(fullPath, `${folderBackup}/${filePath}`);
 					fs.unlinkSync(fullPath);
 				}
-				console.log(chalk.bold.red('[-]'), `${filePath}:`, chalk.hex('#858585')(description));
 			}
 		}
 
 		const { data: rawPackageJSON } = await axios.get(`https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/package.json`);
 		fs.writeFileSync(`${process.cwd()}/package.json`, typeof rawPackageJSON === "string" ? rawPackageJSON : JSON.stringify(rawPackageJSON, null, 2));
 
-		log.info("UPDATE", getText("updater", "updateSuccess", !reinstallDependencies ? getText("updater", "restartToApply") : ""));
-
 		if (reinstallDependencies) {
-			log.info("UPDATE", getText("updater", "installingPackages"));
 			execSync("npm install", { stdio: 'inherit' });
-			log.info("UPDATE", getText("updater", "installSuccess"));
 		}
 
-		log.info("UPDATE", getText("updater", "backupSuccess", chalk.yellow(folderBackup)));
+		return `✅ Successfully updated Aliya Official V4 to version ${createUpdate.version}! Please restart your bot.`;
 	} catch (err) {
-		log.error("UPDATE", "Failed to update Aliya Official v4:", err.message || err);
+		throw new Error(err.message || err);
 	}
-})();
-						
+};
+	

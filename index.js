@@ -1,15 +1,18 @@
 /**
- * @author Mr.king
- * Aliya Official V4
- * Port-Free Ultra Fast Launcher
+ * @author Mr.king x Aliya
+ * Aliya Official V4 Engine
+ * Ultra Fast Auto-Recovery Launcher
  */
 
 "use strict";
 
 const { spawn } = require("child_process");
+const http = require("http");
 
 const BOT_FILE = "Aliya.js";
-const RESTART_DELAY = 1000; // 1 Second Instant Recovery
+const RESTART_DELAY = 1000;
+const MAX_CRASH_COUNT = 5;
+const CRASH_RESET_TIME = 60000; // 1 min
 
 const BANNER = `
   █████╗ ██╗     ██╗██╗   ██╗██████╗     ██╗   ██╗██╗  ██╗
@@ -25,6 +28,13 @@ let shuttingDown = false;
 let restartTimer = null;
 let restartCount = 0;
 let crashCount = 0;
+let lastCrashTime = Date.now();
+
+// Render/Koyeb Keep-Alive HTTP Port (Optional)
+const PORT = process.env.PORT || 8080;
+http.createServer((req, res) => res.end("Aliya V4 Engine Running!")).listen(PORT, () => {
+    log("🌐", "SERVER", `Dummy keep-alive HTTP server listening on port: [ ${PORT} ]`);
+});
 
 function now() {
     return new Date().toTimeString().split(' ')[0];
@@ -86,8 +96,31 @@ function startBot() {
 
         if (shuttingDown) return;
 
-        crashCount++;
-        log("⚠️", "AUTO_HEAL", `Crash detected! Total Crashes: [ ${crashCount} ]`);
+        // Code 0/130 means intentionally stopped/killed by admin
+        if (code === 0) {
+            log("🛑", "STOP", "Bot process stopped gracefully. Auto-restart skipped.");
+            return;
+        }
+
+        // Crash-Loop Protection
+        const currentTime = Date.now();
+        if (currentTime - lastCrashTime < CRASH_RESET_TIME) {
+            crashCount++;
+        } else {
+            crashCount = 1;
+        }
+        lastCrashTime = currentTime;
+
+        if (crashCount >= MAX_CRASH_COUNT) {
+            log("🚨", "CRASH_GUARD", `Too many crashes (${crashCount} times within 1 minute). Pausing restart for 30s to prevent spam...`);
+            setTimeout(() => {
+                crashCount = 0;
+                scheduleRestart();
+            }, 30000);
+            return;
+        }
+
+        log("⚠️", "AUTO_HEAL", `Crash detected! Total Consecutive Crashes: [ ${crashCount} ]`);
         scheduleRestart();
     });
 }
@@ -131,4 +164,4 @@ process.on("unhandledRejection", err => log("⚠️", "UNHANDLED", err.message))
 
 // Directly launch engine
 startBot();
-        
+      

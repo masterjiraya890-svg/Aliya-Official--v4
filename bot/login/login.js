@@ -912,6 +912,14 @@ async function startBot(loginWithEmail) {
 							isSendNotiErrorMessage = true;
 						}
 
+						// ID really logged out => turn the server OFF (index.js sees exit code 0 and stops too).
+						// "Connection refused" is only a temporary network problem, so that one still retries below.
+						if (String(error.error || "").startsWith("Not logged in")) {
+							log.err("LOGOUT", "ID logged out. Server turning OFF...");
+							setTimeout(() => process.exit(0), 3000); // small delay so error notifications can be sent
+							return;
+						}
+
 						if (global.GoatBot.config.autoRestartWhenListenMqttError)
 							process.exit(2);
 						else {

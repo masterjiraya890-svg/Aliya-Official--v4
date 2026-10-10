@@ -7,7 +7,7 @@
 "use strict";
 
 const { spawn } = require("child_process");
-const http = require("http");
+const net = require("net");
 
 const BOT_FILE = "Aliya.js";
 const RESTART_DELAY = 1000;
@@ -27,26 +27,46 @@ let child = null;
 let shuttingDown = false;
 let restartTimer = null;
 let restartCount = 0;
+let starting = false;
 let crashCount = 0;
 let lastCrashTime = Date.now();
 
-// Render/Koyeb Keep-Alive HTTP Port
-// Parent takes the main PORT (Render health check). The bot child gets PORT+1
-// so both never fight over the same port (fixes EADDRINUSE).
-const PORT = Number(process.env.PORT) || 8080;
-const CHILD_PORT = PORT + 1;
+// Smart Port Picker (works for anyone who forks this repo)
+// - Uses process.env.PORT (Render/Koyeb/Railway) or 8080 by default.
+// - If that port is busy, it retries a few times, then falls back to a random free port.
+// - The chosen port is passed to the bot (Aliya.js) as process.env.PORT.
+// - No dummy server here: the bot owns the port, so bot OFF = server OFF.
+const PREFERRED_PORT = Number(process.env.PORT) || 8080;
 
-const keepAliveServer = http.createServer((req, res) => res.end("Aliya V4 Engine Running!"));
-keepAliveServer.on("error", err => {
-    if (err.code === "EADDRINUSE") {
-        log("⚠️", "SERVER", `Port ${PORT} already in use. Keep-alive server skipped.`);
-    } else {
-        log("❌", "SERVER", err.message);
+function isPortFree(port) {
+    return new Promise(resolve => {
+        const tester = net.createServer();
+        tester.once("error", () => resolve(false));
+        tester.once("listening", () => tester.close(() => resolve(true)));
+        tester.listen(port, "0.0.0.0");
+    });
+}
+
+function getRandomFreePort() {
+    return new Promise((resolve, reject) => {
+        const tester = net.createServer();
+        tester.once("error", reject);
+        tester.listen(0, "0.0.0.0", () => {
+            const port = tester.address().port;
+            tester.close(() => resolve(port));
+        });
+    });
+}
+
+async function pickPort() {
+    for (let i = 0; i < 5; i++) {
+        if (await isPortFree(PREFERRED_PORT)) return PREFERRED_PORT;
+        await new Promise(r => setTimeout(r, 500));
     }
-});
-keepAliveServer.listen(PORT, "0.0.0.0", () => {
-    log("🌐", "SERVER", `Keep-alive HTTP server listening on port: [ ${PORT} ]`);
-});
+    const port = await getRandomFreePort();
+    log("⚠️", "PORT", `Port ${PREFERRED_PORT} is busy. Using free port ${port} instead.`);
+    return port;
+}
 
 function now() {
     return new Date().toTimeString().split(' ')[0];
@@ -60,8 +80,8 @@ function isChildRunning() {
     return child && child.exitCode === null && !child.killed;
 }
 
-function startBot() {
-    if (shuttingDown) return;
+async function startBot() {
+    if (shuttingDown || starting) return;
 
     if (isChildRunning()) {
         log("⚠️", "INDEX", "Aliya.js is already running!");
@@ -72,6 +92,19 @@ function startBot() {
         clearTimeout(restartTimer);
         restartTimer = null;
     }
+
+    starting = true;
+    let botPort;
+    try {
+        botPort = await pickPort();
+    } catch (e) {
+        starting = false;
+        log("❌", "PORT_FAIL", e.message);
+        scheduleRestart();
+        return;
+    }
+    starting = false;
+    if (shuttingDown) return;
 
     restartCount++;
 
@@ -87,7 +120,7 @@ function startBot() {
             cwd: __dirname,
             stdio: "inherit",
             shell: false,
-            env: { ...process.env, PORT: String(CHILD_PORT) }
+            env: { ...process.env, PORT: String(botPort) }
         });
     } catch (error) {
         log("❌", "SPAWN_FAIL", `Failed to start ${BOT_FILE}: ${error.message}`);
@@ -110,8 +143,9 @@ function startBot() {
 
         // Code 0/130 means intentionally stopped/killed by admin
         if (code === 0) {
-            log("🛑", "STOP", "Bot process stopped gracefully. Auto-restart skipped.");
-            return;
+            log("🛑", "STOP", "Bot stopped / ID logged out. Server turning OFF...");
+            shuttingDown = true;
+            process.exit(0);
         }
 
         // Crash-Loop Protection
@@ -150,7 +184,7 @@ function scheduleRestart() {
 
 // Watchdog Anti-Hang Protection
 setInterval(() => {
-    if (!shuttingDown && !isChildRunning() && !restartTimer) {
+    if (!shuttingDown && !isChildRunning() && !restartTimer && !starting) {
         log("⚠️", "WATCHDOG", "Bot is inactive! Forcing start...");
         scheduleRestart();
     }
@@ -176,4 +210,4 @@ process.on("unhandledRejection", err => log("⚠️", "UNHANDLED", err.message))
 
 // Directly launch engine
 startBot();
-                
+          

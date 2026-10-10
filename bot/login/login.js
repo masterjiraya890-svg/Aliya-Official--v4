@@ -697,20 +697,10 @@ async function startBot(loginWithEmail) {
 				if (facebookAccount.email && facebookAccount.password) {
 					return startBot(true);
 				}
-				// —————————— CHECK DASHBOARD —————————— //
-				if (global.GoatBot.config.dashBoard?.enable == true) {
-					try {
-						await require("../../dashboard/app.js")(null);
-						log.info("DASHBOARD", getText('login', 'openDashboardSuccess'));
-					}
-					catch (err) {
-						log.err("DASHBOARD", getText('login', 'openDashboardError'), err);
-					}
-					return;
-				}
-				else {
-					process.exit();
-				}
+				// Login failed (ID logged out / cookie dead) => turn the whole server OFF.
+				// Port closes, index.js sees exit code 0 and shuts down too.
+				log.err("LOGIN FACEBOOK", "ID logged out / login failed. Server turning OFF...");
+				process.exit(0);
 			}
 
 			global.GoatBot.fcaApi = api;
@@ -864,9 +854,9 @@ async function startBot(loginWithEmail) {
 			if (global.GoatBot.config.dashBoard?.enable == true && dashBoardIsRunning == false) {
 				logColor('#f5ab00', createLine('DASHBOARD'));
 				try {
+					dashBoardIsRunning = true; // set BEFORE start so a re-login can never open it twice
 					await require("../../dashboard/app.js")(api);
 					log.info("DASHBOARD", getText('login', 'openDashboardSuccess'));
-					dashBoardIsRunning = true;
 				}
 				catch (err) {
 					log.err("DASHBOARD", getText('login', 'openDashboardError'), err);

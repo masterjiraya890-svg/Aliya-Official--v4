@@ -30,10 +30,22 @@ let restartCount = 0;
 let crashCount = 0;
 let lastCrashTime = Date.now();
 
-// Render/Koyeb Keep-Alive HTTP Port (Optional)
-const PORT = process.env.PORT || 8080;
-http.createServer((req, res) => res.end("Aliya V4 Engine Running!")).listen(PORT, () => {
-    log("🌐", "SERVER", `Dummy keep-alive HTTP server listening on port: [ ${PORT} ]`);
+// Render/Koyeb Keep-Alive HTTP Port
+// Parent takes the main PORT (Render health check). The bot child gets PORT+1
+// so both never fight over the same port (fixes EADDRINUSE).
+const PORT = Number(process.env.PORT) || 8080;
+const CHILD_PORT = PORT + 1;
+
+const keepAliveServer = http.createServer((req, res) => res.end("Aliya V4 Engine Running!"));
+keepAliveServer.on("error", err => {
+    if (err.code === "EADDRINUSE") {
+        log("⚠️", "SERVER", `Port ${PORT} already in use. Keep-alive server skipped.`);
+    } else {
+        log("❌", "SERVER", err.message);
+    }
+});
+keepAliveServer.listen(PORT, "0.0.0.0", () => {
+    log("🌐", "SERVER", `Keep-alive HTTP server listening on port: [ ${PORT} ]`);
 });
 
 function now() {
@@ -75,7 +87,7 @@ function startBot() {
             cwd: __dirname,
             stdio: "inherit",
             shell: false,
-            env: process.env
+            env: { ...process.env, PORT: String(CHILD_PORT) }
         });
     } catch (error) {
         log("❌", "SPAWN_FAIL", `Failed to start ${BOT_FILE}: ${error.message}`);
@@ -164,4 +176,4 @@ process.on("unhandledRejection", err => log("⚠️", "UNHANDLED", err.message))
 
 // Directly launch engine
 startBot();
-      
+                

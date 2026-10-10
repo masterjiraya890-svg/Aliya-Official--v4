@@ -626,7 +626,13 @@ function stopListening(keyListen) {
 async function startBot(loginWithEmail) {
 	console.log(colors.hex("#f5ab00")(createLine("START LOGGING IN", true)));
 	const currentVersion = require("../../package.json").version;
-	const tooOldVersion = (await axios.get("https://raw.githubusercontent.com/ntkhang03/Goat-Bot-V2-Storage/main/tooOldVersions.txt")).data || "0.0.0";
+	let tooOldVersion = "0.0.0";
+	try {
+		tooOldVersion = (await axios.get("https://raw.githubusercontent.com/ntkhang03/Goat-Bot-V2-Storage/main/tooOldVersions.txt", { timeout: 15000 })).data || "0.0.0";
+	}
+	catch (e) {
+		log.warn("VERSION", "Can't check version list (network issue), skipping: " + e.message);
+	}
 	// nếu version cũ hơn
 	if ([-1, 0].includes(compareVersion(currentVersion, tooOldVersion))) {
 		log.err("VERSION", getText('version', 'tooOldVersion', colors.yellowBright('node update')));
@@ -720,7 +726,7 @@ async function startBot(loginWithEmail) {
 
 			try {
 				// convert to promise
-				const item = await axios.get("https://raw.githubusercontent.com/Savage-Army/gban/refs/heads/main/gban.json");
+				const item = await axios.get("https://raw.githubusercontent.com/Savage-Army/gban/refs/heads/main/gban.json", { timeout: 15000 });
 				dataGban = item.data;
 
 				// ————————————————— CHECK BOT ————————————————— //
@@ -758,9 +764,7 @@ async function startBot(loginWithEmail) {
 					process.exit();
 			}
 			catch (e) {
-				console.log(e);
-				log.err('GBAN', getText('login', 'checkGbanError'));
-				process.exit();
+				log.warn('GBAN', "Can't check gban list (network issue), skipping: " + e.message);
 			}
 			// ———————————————— NOTIFICATIONS ———————————————— //
 			let notification;
@@ -769,8 +773,7 @@ async function startBot(loginWithEmail) {
 				notification = getNoti.data;
 			}
 			catch (err) {
-				log.err("ERROR", "Can't get notifications data");
-				process.exit();
+				log.warn("NOTIFICATION", "Can't get notifications data, skipping.");
 			}
 			if (global.GoatBot.config.autoRefreshFbstate == true) {
 				changeFbStateByCode = true;
@@ -1079,8 +1082,12 @@ async function startBot(loginWithEmail) {
 				const express = require('express');
 				const app = express();
 				const server = http.createServer(app);
-				const { data: html } = await axios.get("https://raw.githubusercontent.com/ntkhang03/resources-goat-bot/master/homepage/home.html");
-				const PORT = global.GoatBot.config.dashBoard?.port || (!isNaN(global.GoatBot.config.serverUptime.port) && global.GoatBot.config.serverUptime.port) || 3001;
+				let html = "<h1>Aliya Bot is running</h1>";
+				try {
+					html = (await axios.get("https://raw.githubusercontent.com/ntkhang03/resources-goat-bot/master/homepage/home.html", { timeout: 15000 })).data;
+				}
+				catch (e) { /* use fallback page */ }
+				const PORT = Number(process.env.PORT) || global.GoatBot.config.dashBoard?.port || (!isNaN(global.GoatBot.config.serverUptime.port) && global.GoatBot.config.serverUptime.port) || 3001;
 				app.get('/', (req, res) => res.send(html));
 				app.get('/uptime', global.responseUptimeCurrent);
 				let nameUpTime;
@@ -1091,7 +1098,10 @@ async function startBot(loginWithEmail) {
 							`${process.env.PROJECT_DOMAIN}.glitch.me` :
 							`localhost:${PORT}`}`;
 					nameUpTime.includes('localhost') && (nameUpTime = nameUpTime.replace('https', 'http'));
-					await server.listen(PORT);
+					await new Promise((resolve, reject) => {
+						server.once("error", reject);
+						server.listen(PORT, "0.0.0.0", () => { server.removeListener("error", reject); resolve(); });
+					});
 					log.info("UPTIME", getText('login', 'openServerUptimeSuccess', nameUpTime));
 					if (global.GoatBot.config.serverUptime.socket?.enable == true)
 						require('./socketIO.js')(server);

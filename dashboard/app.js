@@ -291,15 +291,26 @@ module.exports = async (api) => {
                         return res.status(500).send(getText("app", "serverError"));
         });
 
-        const PORT = process.env.PORT || 3001;
-        let dashBoardUrl = `https://${process.env.REPL_OWNER
-                ? `${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
-                : process.env.API_SERVER_EXTERNAL == "https://api.glitch.com"
-                        ? `${process.env.PROJECT_DOMAIN}.glitch.me`
-                        : `localhost:${PORT}`}`;
+        const PORT = Number(process.env.PORT) || 3001;
+        let dashBoardUrl = process.env.RENDER_EXTERNAL_URL
+                ? process.env.RENDER_EXTERNAL_URL
+                : `https://${process.env.REPL_OWNER
+                        ? `${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+                        : process.env.API_SERVER_EXTERNAL == "https://api.glitch.com"
+                                ? `${process.env.PROJECT_DOMAIN}.glitch.me`
+                                : `localhost:${PORT}`}`;
         dashBoardUrl.includes("localhost") && (dashBoardUrl = dashBoardUrl.replace("https", "http"));
-        await server.listen(PORT);
-        utils.log.info("DASHBOARD", `Dashboard is running: ${dashBoardUrl}`);
+
+        // server.listen() does not return a Promise, so errors (like EADDRINUSE) were
+        // thrown as uncaught exceptions. Wait for the real result instead.
+        await new Promise((resolve, reject) => {
+                server.once("error", reject);
+                server.listen(PORT, "0.0.0.0", () => {
+                        server.removeListener("error", reject);
+                        resolve();
+                });
+        });
+        utils.log.info("DASHBOARD", `Dashboard is running: ${dashBoardUrl} (port ${PORT})`);
         if (config.serverUptime.socket.enable == true)
                 require("../bot/login/socketIO.js")(server);
 };
